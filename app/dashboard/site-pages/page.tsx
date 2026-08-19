@@ -36,6 +36,7 @@ type Page = {
   heroTag?: string | null;
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  heroImage?: string | null;
   metaTitle?: string | null;
   metaDesc?: string | null;
   metaKeywords?: string | null;
@@ -83,8 +84,40 @@ export default function SitePagesManagement() {
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [uploadingHero, setUploadingHero] = useState(false);
+
+  /**
+   * The hero background used to be SiteSettings.heroBgImage, edited on the Home
+   * Sections screen. It is a property of the page, so it lives on the page now
+   * and every page can have one.
+   */
+  const uploadHero = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingHero(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch(`${API_URL}/api/v1/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: fd,
+      });
+      const data = await res.json();
+      if (data?.success && data.url) patchDraft('heroImage', data.url);
+      else setMsg({ kind: 'err', text: data?.message || 'Upload failed.' });
+    } catch {
+      setMsg({ kind: 'err', text: 'Upload failed — check your connection.' });
+    } finally {
+      setUploadingHero(false);
+      e.target.value = '';
+    }
+  };
   // Per-section escape hatch for shapes the typed editors do not describe.
   const [rawKeys, setRawKeys] = useState<Record<string, boolean>>({});
+  // Creating a page, and adding a section to the open page.
+  const [newPage, setNewPage] = useState<{ key: string; title: string; slug: string } | null>(null);
+  const [newSection, setNewSection] = useState<{ sectionKey: string; kind: string } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,6 +140,131 @@ export default function SitePagesManagement() {
     setDraft(JSON.parse(JSON.stringify(p)));
     setOpenSection(null);
     setMsg(null);
+  };
+
+  const createPage = async () => {
+    if (!newPage) return;
+    const key = newPage.key.trim().toLowerCase();
+    const title = newPage.title.trim();
+    if (!key || !title) {
+      setMsg({ kind: 'err', text: 'Give the new page a key and a title.' });
+      return;
+    }
+    setSaving(true);
+    setMsg(null);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/site-pages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ key, title, slug: newPage.slug.trim() || key }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMsg({ kind: 'ok', text: `Page "${title}" created.` });
+        setNewPage(null);
+        await load();
+        openPage(data.data);
+      } else {
+        setMsg({ kind: 'err', text: data.message || 'Could not create the page.' });
+      }
+    } catch {
+      setMsg({ kind: 'err', text: 'Could not reach the API.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deletePage = async (p: Page) => {
+    if (!confirm(`Delete the "${p.title}" page and all ${p.sections.length} of its sections?
+
+Built-in pages are unpublished instead of deleted, so their content is kept.`)) return;
+    setSaving(true);
+    setMsg(null);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/site-pages/${p.key}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMsg({ kind: 'ok', text: data.message || 'Page deleted.' });
+        setOpenKey(null);
+        setDraft(null);
+        await load();
+      } else {
+        setMsg({ kind: 'err', text: data.message || 'Could not delete the page.' });
+      }
+    } catch {
+      setMsg({ kind: 'err', text: 'Could not reach the API.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addSection = async () => {
+    if (!draft || !newSection) return;
+    const sectionKey = newSection.sectionKey.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/(^-|-$)+/g, '');
+    if (!sectionKey) {
+      setMsg({ kind: 'err', text: 'Give the new section a key, for example "why-us".' });
+      return;
+    }
+    if (draft.sections.some((s) => s.sectionKey === sectionKey)) {
+      setMsg({ kind: 'err', text: `This page already has a section called "${sectionKey}".` });
+      return;
+    }
+    setSaving(true);
+    setMsg(null);
+    try {
+      const nextOrder = draft.sections.reduce((max, s) => Math.max(max, s.sortOrder ?? 0), 0) + 1;
+      const res = await fetch(`${API_URL}/api/v1/site-pages/${draft.key}/sections/${sectionKey}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ sectionKey, kind: newSection.kind, sortOrder: nextOrder, isActive: true }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMsg({ kind: 'ok', text: `Section "${sectionKey}" added.` });
+        setNewSection(null);
+        await load();
+        if (data.data) openPage(data.data);
+        setOpenSection(sectionKey);
+      } else {
+        setMsg({ kind: 'err', text: data.message || 'Could not add the section.' });
+      }
+    } catch {
+      setMsg({ kind: 'err', text: 'Could not reach the API.' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeSection = async (s: Section) => {
+    if (!draft) return;
+    if (!confirm(`Delete the "${s.sectionKey}" section from ${draft.title}? Its content cannot be recovered.`)) return;
+    setSaving(true);
+    setMsg(null);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/site-pages/${draft.key}/sections/${s.sectionKey}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMsg({ kind: 'ok', text: `Section "${s.sectionKey}" deleted.` });
+        setOpenSection(null);
+        const key = draft.key;
+        await load();
+        setDraft((d) => (d && d.key === key ? { ...d, sections: d.sections.filter((x) => x.sectionKey !== s.sectionKey) } : d));
+      } else {
+        setMsg({ kind: 'err', text: data.message || 'Could not delete the section.' });
+      }
+    } catch {
+      setMsg({ kind: 'err', text: 'Could not reach the API.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const savePage = async () => {
@@ -229,6 +387,61 @@ export default function SitePagesManagement() {
           </div>
         )}
 
+        <div style={{ ...card, padding: '16px 18px' }}>
+          {newPage === null ? (
+            <button
+              onClick={() => setNewPage({ key: '', title: '', slug: '' })}
+              style={primaryBtn(false)}
+            >
+              + Add a page
+            </button>
+          ) : (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                <div>
+                  <label style={label}>Page key</label>
+                  <input
+                    style={input}
+                    placeholder="our-team"
+                    value={newPage.key}
+                    onChange={(e) => setNewPage({ ...newPage, key: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') })}
+                  />
+                </div>
+                <div>
+                  <label style={label}>Title</label>
+                  <input
+                    style={input}
+                    placeholder="Our Team"
+                    value={newPage.title}
+                    onChange={(e) => setNewPage({ ...newPage, title: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={label}>URL slug</label>
+                  <input
+                    style={input}
+                    placeholder="defaults to the key"
+                    value={newPage.slug}
+                    onChange={(e) => setNewPage({ ...newPage, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') })}
+                  />
+                </div>
+              </div>
+              <p style={{ fontSize: '12.5px', color: 'var(--mu)', marginBottom: '12px' }}>
+                The key is permanent and identifies the page internally. The slug is the public URL and
+                can be changed later.
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={createPage} disabled={saving} style={primaryBtn(saving)}>
+                  {saving ? 'Creating…' : 'Create page'}
+                </button>
+                <button onClick={() => setNewPage(null)} disabled={saving} style={ghostBtn}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {loading ? (
           <div style={{ padding: '60px', textAlign: 'center', color: 'var(--mu)' }}>Loading pages…</div>
         ) : (
@@ -319,6 +532,73 @@ export default function SitePagesManagement() {
                         />
                       </div>
 
+                      <div style={{ marginBottom: '14px' }}>
+                        <label style={label}>Hero background image</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          {d.heroImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={d.heroImage.startsWith('http') ? d.heroImage : `${API_URL}${d.heroImage}`}
+                              alt=""
+                              style={{ width: 120, height: 68, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--br)' }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                width: 120,
+                                height: 68,
+                                borderRadius: 8,
+                                background: '#f1f5f9',
+                                border: '1px dashed #cbd5e1',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: 11,
+                                color: '#94a3b8',
+                              }}
+                            >
+                              No image
+                            </div>
+                          )}
+                          <div style={{ flex: 1 }}>
+                            <input
+                              style={input}
+                              value={d.heroImage ?? ''}
+                              placeholder="/uploads/hero.jpg — or upload"
+                              onChange={(e) => patchDraft('heroImage', e.target.value)}
+                            />
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 6 }}>
+                              <input
+                                type="file"
+                                id="sp-hero-upload"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={uploadHero}
+                                disabled={uploadingHero}
+                              />
+                              <label
+                                htmlFor="sp-hero-upload"
+                                style={{ fontSize: 12, fontWeight: 800, color: 'var(--bd)', cursor: 'pointer' }}
+                              >
+                                {uploadingHero ? 'Uploading…' : 'Upload image'}
+                              </label>
+                              {d.heroImage && (
+                                <button
+                                  type="button"
+                                  onClick={() => patchDraft('heroImage', '')}
+                                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--mu)', marginTop: 4 }}>
+                              Widescreen 16:9 works best — 1920 × 1080 or larger. Leave empty for the plain gradient.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                         <div>
                           <label style={label}>SEO title</label>
@@ -355,9 +635,14 @@ export default function SitePagesManagement() {
                         </div>
                       </div>
 
-                      <button onClick={savePage} disabled={saving} style={primaryBtn(saving)}>
-                        {saving ? 'Saving…' : 'Save page settings'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button onClick={savePage} disabled={saving} style={primaryBtn(saving)}>
+                          {saving ? 'Saving…' : 'Save page settings'}
+                        </button>
+                        <button onClick={() => deletePage(d)} disabled={saving} style={dangerBtn}>
+                          Delete page
+                        </button>
+                      </div>
 
                       {/* ── sections ──────────────────────────────── */}
                       <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--td)', margin: '26px 0 4px' }}>
@@ -561,7 +846,10 @@ export default function SitePagesManagement() {
                                       onChange={(e) => patchSection(s.sectionKey, 'sortOrder', parseInt(e.target.value, 10) || 0)}
                                     />
                                   </div>
-                                  <button onClick={() => saveSection(s)} disabled={saving} style={{ ...primaryBtn(saving), marginLeft: 'auto' }}>
+                                  <button onClick={() => removeSection(s)} disabled={saving} style={{ ...dangerBtn, marginLeft: 'auto' }}>
+                                    Delete section
+                                  </button>
+                                  <button onClick={() => saveSection(s)} disabled={saving} style={primaryBtn(saving)}>
                                     {saving ? 'Saving…' : 'Save section'}
                                   </button>
                                 </div>
@@ -570,6 +858,52 @@ export default function SitePagesManagement() {
                           </div>
                         );
                       })}
+
+                      {/* ── add a section ── */}
+                      <div style={{ marginTop: '12px' }}>
+                        {newSection === null ? (
+                          <button onClick={() => setNewSection({ sectionKey: '', kind: 'richtext' })} style={ghostBtn}>
+                            + Add a section
+                          </button>
+                        ) : (
+                          <div style={{ border: '1px dashed var(--br)', borderRadius: '10px', padding: '14px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+                              <div>
+                                <label style={label}>Section key</label>
+                                <input
+                                  style={input}
+                                  placeholder="why-us"
+                                  value={newSection.sectionKey}
+                                  onChange={(e) => setNewSection({ ...newSection, sectionKey: e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-') })}
+                                />
+                              </div>
+                              <div>
+                                <label style={label}>What it renders</label>
+                                <select
+                                  style={input}
+                                  value={newSection.kind}
+                                  onChange={(e) => setNewSection({ ...newSection, kind: e.target.value })}
+                                >
+                                  {Object.keys(KIND_HELP).sort().map((k) => (
+                                    <option key={k} value={k}>{k}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                            <p style={{ fontSize: '12.5px', color: 'var(--mu)', marginBottom: '10px' }}>
+                              {KIND_HELP[newSection.kind] || ''}
+                            </p>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button onClick={addSection} disabled={saving} style={primaryBtn(saving)}>
+                                {saving ? 'Adding…' : 'Add section'}
+                              </button>
+                              <button onClick={() => setNewSection(null)} disabled={saving} style={ghostBtn}>
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -609,6 +943,30 @@ function Check({ checked, onChange, text }: { checked: boolean; onChange: (v: bo
     </label>
   );
 }
+
+const ghostBtn: React.CSSProperties = {
+  background: '#fff',
+  color: 'var(--td, #1f2937)',
+  border: '1px solid var(--br)',
+  padding: '10px 18px',
+  borderRadius: '8px',
+  fontSize: '13.5px',
+  fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+};
+
+const dangerBtn: React.CSSProperties = {
+  background: '#fff',
+  color: '#b91c1c',
+  border: '1px solid #fca5a5',
+  padding: '10px 18px',
+  borderRadius: '8px',
+  fontSize: '13.5px',
+  fontWeight: 700,
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+};
 
 function primaryBtn(disabled: boolean): React.CSSProperties {
   return {

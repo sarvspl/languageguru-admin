@@ -4,6 +4,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../../lib/env';
 
+/** Mirrors the backend slugify in config/slug.js so the field can never
+ *  submit a shape the API will reject. */
+const slugify = (raw: string) =>
+  String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
 
 // Extended icon options for the icon pickers
 const ICON_OPTIONS = [
@@ -14,6 +19,8 @@ interface Language {
   id?: string;
   name: string;
   key: string;
+  /** Admin-editable URL slug. `key` above stays fixed as the identifier. */
+  slug?: string;
   flag: string;
   native?: string;
   cat?: string;
@@ -258,7 +265,7 @@ export default function LanguagesPage() {
   const handleOpenAdd = () => {
     setEditingLang(null);
     const defaults = getLanguageDefaults('New Language', 'new-language', '🌐', 850);
-    setFormData({ name: '', key: '', flag: '🌐', native: '', cat: 'European', speakers: '', region: '',
+    setFormData({ name: '', key: '', slug: '', flag: '🌐', native: '', cat: 'European', speakers: '', region: '',
       difficulty: 'Medium', script: 'Latin', price: 850, isActive: true,
       metaTitle: defaults.metaTitle, metaDesc: defaults.metaDesc, metaKeywords: defaults.metaKeywords,
       ogImage: '', contentOverrides: defaults });
@@ -282,7 +289,7 @@ export default function LanguagesPage() {
     const heroImg = mergedCO.heroBgImage || '';
     setHeroImgPreview(heroImg ? (heroImg.startsWith('http') ? heroImg : `${API_URL}${heroImg}`) : '');
     setFormData({
-      id: lang.id, name: lang.name, key: lang.key, flag: lang.flag || '🌐',
+      id: lang.id, name: lang.name, key: lang.key, slug: lang.slug || lang.key, flag: lang.flag || '🌐',
       native: lang.native || '', cat: lang.cat || 'European', speakers: lang.speakers || '',
       region: lang.region || '', difficulty: lang.difficulty || 'Medium', script: lang.script || 'Latin',
       price: lang.price || 850, isActive: lang.isActive ?? true,
@@ -328,6 +335,7 @@ export default function LanguagesPage() {
       const method = editingLang?.id ? 'PUT' : 'POST';
       const payload = {
         ...formData, price: Number(formData.price) || 850,
+        slug: slugify(formData.slug || formData.key),
         metaTitle: formData.metaTitle || formData.contentOverrides?.metaTitle,
         metaDesc: formData.metaDesc || formData.contentOverrides?.metaDesc,
         metaKeywords: formData.metaKeywords || formData.contentOverrides?.metaKeywords,
@@ -495,7 +503,7 @@ export default function LanguagesPage() {
                         {lang.name}
                         {lang.native && <span style={{ fontSize: '11px', color: 'var(--mu)', marginLeft: '6px', fontWeight: '400' }}>({lang.native})</span>}
                       </td>
-                      <td style={{ color: 'var(--bb)', fontFamily: 'monospace', fontSize: '13px' }}>/languages/{lang.key}</td>
+                      <td style={{ color: 'var(--bb)', fontFamily: 'monospace', fontSize: '13px' }}>/languages/{lang.slug || lang.key}</td>
                       <td><span style={{ fontSize: '11px', background: 'var(--bp)', color: 'var(--bd)', padding: '3px 8px', borderRadius: '4px', fontWeight: '600' }}>{lang.cat || 'General'}</span></td>
                       <td style={{ fontWeight: '700', color: 'var(--bd)' }}>₹{lang.price || 850}/pg</td>
                       <td>
@@ -530,7 +538,7 @@ export default function LanguagesPage() {
                   <span>{formData.flag || '🌐'}</span> {editingLang ? `Edit Language: ${formData.name}` : 'Add New Language'}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '2px 0 0 0' }}>
-                  Live URL: <code>/languages/{formData.key || 'language-slug'}</code> · All fields are 100% editable and live-synced.
+                  Live URL: <code>/languages/{formData.slug || formData.key || 'language-slug'}</code> · All fields are 100% editable and live-synced.
                 </p>
               </div>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', color: 'var(--mu)', cursor: 'pointer', fontWeight: 'bold', padding: '4px 8px' }}>✕</button>
@@ -558,7 +566,20 @@ export default function LanguagesPage() {
                       <h4 style={sectionTitleStyle}>🏷️ Basic Language Information</h4>
                       <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2fr', gap: '14px', marginBottom: '14px' }}>
                         <div><label style={labelStyle}>Language Name</label><input style={inputStyle} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required /></div>
-                        <div><label style={labelStyle}>Slug Key (URL: /languages/[slug])</label><input style={inputStyle} value={formData.key} onChange={e => setFormData({ ...formData, key: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-') })} required /></div>
+                        <div>
+                          <label style={labelStyle}>Slug (URL: /languages/[slug])</label>
+                          <input
+                            style={inputStyle}
+                            value={formData.slug ?? formData.key}
+                            onChange={e => {
+                              const next = e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+                              // `key` is the immutable identifier the API refuses to change,
+                              // so only a brand-new language sets it here.
+                              setFormData(prev => ({ ...prev, slug: next, ...(editingLang ? {} : { key: next }) }));
+                            }}
+                            required
+                          />
+                        </div>
                         <div><label style={labelStyle}>Flag Emoji</label><input style={inputStyle} value={formData.flag} onChange={e => setFormData({ ...formData, flag: e.target.value })} required /></div>
                         <div><label style={labelStyle}>Native Name (e.g. Deutsch)</label><input style={inputStyle} value={formData.native || ''} onChange={e => setFormData({ ...formData, native: e.target.value })} /></div>
                       </div>

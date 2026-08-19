@@ -50,7 +50,7 @@ export default function HomeSectionsManagement() {
   const [showWhyChooseModal, setShowWhyChooseModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [activeTab, setActiveTab] = useState<'hero' | 'static' | 'services' | 'whyChoose' | 'branding'>('hero');
+  const [activeTab, setActiveTab] = useState<'static' | 'services' | 'whyChoose' | 'branding'>('static');
 
   const [formData, setFormData] = useState({
     sectionId: '', tag: '', title: '', content: '', imageUrl: '', layout: 'image-right', buttonText: '', buttonLink: '', stat1Value: '', stat1Label: '', stat2Value: '', stat2Label: '', isActive: true, sortOrder: 0
@@ -79,21 +79,6 @@ export default function HomeSectionsManagement() {
     whyChooseSubtitle: 'ISO-9001:2015 and ISO 17100:2015 certified · MSME registered · MEA-empanelled · 10,000+ clients · Embassy-accepted translations guaranteed.'
   });
   
-  const [heroSettings, setHeroSettings] = useState({
-    heroBgImage: '',
-    heroHeading: 'Certified Translation Services in Delhi',
-    heroSubtitle: 'ISO 9001:2015 Certified · 25+ Years Experience · 100+ Languages',
-    heroTopBadge: '⭐ ISO-9001:2015 and ISO 17100:2015 Certified Translation Agency',
-    heroTopLine: 'INDIA\'S #1 CERTIFIED TRANSLATION AGENCY',
-    heroTrustBadge1: '🛡️ ISO-9001:2015 and ISO 17100:2015',
-    heroTrustBadge2: '📑 MSME Registered',
-    heroTrustBadge3: '🏛️ MEA Empanelled',
-    heroTrustBadge4: '⭐ 4.9 Rating',
-    stat1Value: '100+', stat1Label: 'Languages',
-    stat2Value: '10,000+', stat2Label: 'Happy Clients',
-    stat3Value: '20+', stat3Label: 'Years Experience',
-    stat4Value: '150+', stat4Label: 'Indian Cities',
-  });
 
   const [savingHeader, setSavingHeader] = useState(false);
   const [headerSavedMsg, setHeaderSavedMsg] = useState('');
@@ -117,21 +102,6 @@ export default function HomeSectionsManagement() {
           whyChooseTag: setData.settings.whyChooseTag || 'Why Choose Us',
           whyChooseTitle: setData.settings.whyChooseTitle || 'Why Choose Language Guru for <em>Certified Translation</em>',
           whyChooseSubtitle: setData.settings.whyChooseSubtitle || 'ISO-9001:2015 and ISO 17100:2015 certified · MSME registered · MEA-empanelled · 10,000+ clients · Embassy-accepted translations guaranteed.'
-        });
-        setHeroSettings({
-          heroBgImage: setData.settings.heroBgImage || '',
-          heroHeading: setData.settings.heroHeading || 'Certified Translation Services in Delhi',
-          heroSubtitle: setData.settings.heroSubtitle || 'ISO 9001:2015 Certified · 25+ Years Experience · 100+ Languages',
-          heroTopBadge: setData.settings.heroTopBadge || '⭐ ISO-9001:2015 and ISO 17100:2015 Certified Translation Agency',
-          heroTopLine: setData.settings.heroTopLine || 'INDIA\'S #1 CERTIFIED TRANSLATION AGENCY',
-          heroTrustBadge1: setData.settings.heroTrustBadge1 || '🛡️ ISO-9001:2015 and ISO 17100:2015',
-          heroTrustBadge2: setData.settings.heroTrustBadge2 || '📑 MSME Registered',
-          heroTrustBadge3: setData.settings.heroTrustBadge3 || '🏛️ MEA Empanelled',
-          heroTrustBadge4: setData.settings.heroTrustBadge4 || '⭐ 4.9 Rating',
-          stat1Value: setData.settings.stat1Value || '100+', stat1Label: setData.settings.stat1Label || 'Languages',
-          stat2Value: setData.settings.stat2Value || '10,000+', stat2Label: setData.settings.stat2Label || 'Happy Clients',
-          stat3Value: setData.settings.stat3Value || '20+', stat3Label: setData.settings.stat3Label || 'Years Experience',
-          stat4Value: setData.settings.stat4Value || '150+', stat4Label: setData.settings.stat4Label || 'Indian Cities',
         });
       }
     } catch (error) {
@@ -361,54 +331,9 @@ export default function HomeSectionsManagement() {
     }
   };
 
-  const handleSaveHeroSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingHeader(true);
-    setHeaderSavedMsg('');
-    try {
-      const apiUrl = API_URL;
-      const res = await fetch(`${apiUrl}/api/v1/settings`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(heroSettings)
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setHeaderSavedMsg('Hero Settings updated successfully!');
-        setTimeout(() => setHeaderSavedMsg(''), 4000);
-      } else {
-        alert(data.message || 'Failed to update hero settings');
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Network error while saving hero settings');
-    } finally {
-      setSavingHeader(false);
-    }
-  };
-
-  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    setUploadingImage(true);
-    const file = e.target.files[0];
-    const fd = new FormData();
-    fd.append('image', file);
-    try {
-      const apiUrl = API_URL;
-      const res = await fetch(`${apiUrl}/api/v1/upload`, {
-        method: 'POST', credentials: 'include', body: fd
-      });
-      const data = await res.json();
-      if(data.success) {
-        setHeroSettings(p => ({ ...p, heroBgImage: data.url }));
-      }
-    } catch(e) {
-      alert('Upload failed');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
+  // handleSaveHeroSettings and handleHeroImageUpload were removed with the
+  // Hero tab: the hero now lives on the Home page under Site Pages, so those
+  // SiteSettings columns are no longer what the site renders.
 
   return (
     <>
@@ -421,12 +346,12 @@ export default function HomeSectionsManagement() {
             {activeTab === 'whyChoose' && <button onClick={openAddWhyChooseModal} className="btn-add">➕ Add Feature</button>}
           </div>
 
+          <p style={{ margin: '0 0 16px', padding: '10px 14px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, fontSize: 12, color: '#0369a1', lineHeight: 1.6 }}>
+            The hero, the four headline statistics and the trust badges are edited under{' '}
+            <strong>Site Pages → Home</strong>. They used to be duplicated here and there, and the
+            two copies drifted apart — the site now reads only the Site Pages one.
+          </p>
           <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid var(--br)', marginBottom: '20px' }}>
-            <button 
-              onClick={() => setActiveTab('hero')} 
-              style={{ background: 'none', border: 'none', padding: '8px 16px', fontWeight: 'bold', borderBottom: activeTab === 'hero' ? '2px solid var(--bd)' : 'none', color: activeTab === 'hero' ? 'var(--bd)' : 'var(--mu)', cursor: 'pointer' }}>
-              Hero & Main Settings
-            </button>
             <button 
               onClick={() => setActiveTab('static')} 
               style={{ background: 'none', border: 'none', padding: '8px 16px', fontWeight: 'bold', borderBottom: activeTab === 'static' ? '2px solid var(--bd)' : 'none', color: activeTab === 'static' ? 'var(--bd)' : 'var(--mu)', cursor: 'pointer' }}>
@@ -453,117 +378,6 @@ export default function HomeSectionsManagement() {
 
           {loading ? (
             <p>Loading content...</p>
-          ) : activeTab === 'hero' ? (
-            <div style={{ padding: '20px', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--br)' }}>
-              <form onSubmit={handleSaveHeroSettings}>
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Hero Background Image</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    {heroSettings.heroBgImage ? (
-                      <div style={{ width: '120px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--br)', position: 'relative' }}>
-                        <img src={heroSettings.heroBgImage.startsWith('http') ? heroSettings.heroBgImage : `${API_URL}${heroSettings.heroBgImage}`} alt="Hero Bg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      </div>
-                    ) : (
-                      <div style={{ width: '120px', height: '80px', borderRadius: '8px', background: '#f1f5f9', border: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94a3b8' }}>
-                        No Image
-                      </div>
-                    )}
-                    <div>
-                      <input type="file" id="heroBgUpload" accept="image/*" style={{ display: 'none' }} onChange={handleHeroImageUpload} disabled={uploadingImage} />
-                      <label htmlFor="heroBgUpload" style={{ background: 'var(--bd)', color: '#fff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-block' }}>
-                        {uploadingImage ? 'Uploading...' : 'Upload New Image'}
-                      </label>
-                      {heroSettings.heroBgImage && (
-                        <button type="button" onClick={() => setHeroSettings(p => ({ ...p, heroBgImage: '' }))} style={{ display: 'block', background: 'none', border: 'none', color: '#ef4444', fontSize: '13px', fontWeight: 'bold', marginTop: '8px', cursor: 'pointer' }}>
-                          Remove Image
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ marginTop: '10px', padding: '10px 14px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #bae6fd', fontSize: '12px', color: '#0369a1', lineHeight: '1.6' }}>
-                    📐 <strong>Recommended Aspect Ratio:</strong> <strong>16:9</strong> (e.g. <strong>1920 × 1080 px</strong> or <strong>2560 × 1440 px</strong>). Widescreen landscape images work best for full-width coverage across all desktop and mobile displays. Supported formats: JPG, PNG, WebP (Max 5MB).
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Hero Top Badge</label>
-                    <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroTopBadge} onChange={e => setHeroSettings({...heroSettings, heroTopBadge: e.target.value})} placeholder="⭐ ISO-9001:2015 and ISO 17100:2015 Certified Translation Agency" />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Hero Top Line (Small uppercase text)</label>
-                    <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroTopLine} onChange={e => setHeroSettings({...heroSettings, heroTopLine: e.target.value})} placeholder="INDIA'S #1 CERTIFIED TRANSLATION AGENCY" />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Hero Main Heading</label>
-                    <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroHeading} onChange={e => setHeroSettings({...heroSettings, heroHeading: e.target.value})} placeholder="Certified Translation Services in Delhi" />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Hero Subtitle</label>
-                    <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroSubtitle} onChange={e => setHeroSettings({...heroSettings, heroSubtitle: e.target.value})} placeholder="ISO 9001:2015 Certified · 25+ Years Experience" />
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '15px', color: 'var(--bd)', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--br)' }}>Hero Bottom Trust Badges</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Trust Badge 1</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroTrustBadge1} onChange={e => setHeroSettings({...heroSettings, heroTrustBadge1: e.target.value})} placeholder="🛡️ ISO-9001:2015 and ISO 17100:2015" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Trust Badge 2</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroTrustBadge2} onChange={e => setHeroSettings({...heroSettings, heroTrustBadge2: e.target.value})} placeholder="📑 MSME Registered" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Trust Badge 3</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroTrustBadge3} onChange={e => setHeroSettings({...heroSettings, heroTrustBadge3: e.target.value})} placeholder="🏛️ MEA Empanelled" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Trust Badge 4</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.heroTrustBadge4} onChange={e => setHeroSettings({...heroSettings, heroTrustBadge4: e.target.value})} placeholder="⭐ 4.9 Rating" />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '15px', color: 'var(--bd)', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--br)' }}>Global Stats (Below Hero)</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 1 Value</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat1Value} onChange={e => setHeroSettings({...heroSettings, stat1Value: e.target.value})} placeholder="100+" />
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginTop: '8px', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 1 Label</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat1Label} onChange={e => setHeroSettings({...heroSettings, stat1Label: e.target.value})} placeholder="Languages" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 2 Value</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat2Value} onChange={e => setHeroSettings({...heroSettings, stat2Value: e.target.value})} placeholder="10,000+" />
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginTop: '8px', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 2 Label</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat2Label} onChange={e => setHeroSettings({...heroSettings, stat2Label: e.target.value})} placeholder="Happy Clients" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 3 Value</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat3Value} onChange={e => setHeroSettings({...heroSettings, stat3Value: e.target.value})} placeholder="20+" />
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginTop: '8px', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 3 Label</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat3Label} onChange={e => setHeroSettings({...heroSettings, stat3Label: e.target.value})} placeholder="Years Experience" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 4 Value</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat4Value} onChange={e => setHeroSettings({...heroSettings, stat4Value: e.target.value})} placeholder="150+" />
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: 'var(--mu)', marginTop: '8px', marginBottom: '8px', textTransform: 'uppercase' }}>Stat 4 Label</label>
-                      <input style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--br)', borderRadius: '6px', fontSize: '14px' }} value={heroSettings.stat4Label} onChange={e => setHeroSettings({...heroSettings, stat4Label: e.target.value})} placeholder="Indian Cities" />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid var(--br)', paddingTop: '20px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '16px' }}>
-                  {headerSavedMsg && <span style={{ color: '#16a34a', fontSize: '14px', fontWeight: 'bold' }}>{headerSavedMsg}</span>}
-                  <button type="submit" disabled={savingHeader} style={{ background: 'var(--bd)', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', opacity: savingHeader ? 0.7 : 1 }}>
-                    {savingHeader ? 'Saving...' : 'Save Hero Settings'}
-                  </button>
-                </div>
-              </form>
-            </div>
           ) : activeTab === 'static' ? (
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
               <thead>

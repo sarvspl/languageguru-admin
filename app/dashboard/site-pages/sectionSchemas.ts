@@ -92,6 +92,48 @@ const BY_KIND: Record<string, ItemSpec> = {
 
 // ─── items: per-section overrides ───────────────────────────────────────────
 const BY_SECTION: Record<string, ItemSpec> = {
+  'home:hero': {
+    noun: 'hero button',
+    titleField: 'label',
+    fields: [
+      { name: 'label', label: 'Button text', span: 5 },
+      {
+        name: 'href',
+        label: 'Links to',
+        help: 'A path such as /quote, a full URL, or {{phone}} / {{whatsapp}} to use the numbers from Settings.',
+        span: 4,
+      },
+      {
+        name: 'variant',
+        label: 'Style',
+        type: 'select',
+        options: ['primary', 'outline', 'whatsapp'],
+        span: 3,
+      },
+    ],
+  },
+  'home:quick-quote': {
+    noun: 'assignment type',
+    titleField: 'label',
+    fields: [
+      { name: 'label', label: 'Label', span: 8 },
+      { name: 'value', label: 'Rate (₹)', span: 4 },
+    ],
+  },
+  'home:interpreter-tabs': {
+    noun: 'interpreter tab',
+    titleField: 'label',
+    fields: [
+      { name: 'key', label: 'Key', help: 'Short identifier — must stay unique.', span: 3 },
+      { name: 'label', label: 'Tab button', placeholder: '🎤 Conference', span: 4 },
+      { name: 'icon', label: 'Icon', placeholder: '🎤', span: 2 },
+      { name: 'bookAs', label: 'Books as', help: 'Pre-fills the quote form.', span: 3 },
+      { name: 'title', label: 'Panel heading', span: 12 },
+      { name: 'desc', label: 'Description', type: 'textarea', span: 12 },
+      { name: 'points', label: 'Bullet points', type: 'tags', span: 12 },
+      { name: 'steps', label: 'How it works', type: 'tags', help: 'Numbered left to right.', span: 12 },
+    ],
+  },
   'languages:categories': {
     noun: 'category',
     titleField: 'title',
@@ -101,6 +143,147 @@ const BY_SECTION: Record<string, ItemSpec> = {
       { name: 'title', label: 'Heading', span: 6 },
       { name: 'desc', label: 'Description', type: 'textarea', span: 12 },
     ],
+  },
+  'cities:how-it-works': {
+    noun: 'service model',
+    titleField: 'title',
+    fields: [
+      { name: 'badge', label: 'Badge', placeholder: '📍 Physical Service', span: 5 },
+      { name: 'title', label: 'Title', span: 5 },
+      { name: 'accent', label: 'Accent', type: 'select', options: ['primary', 'accent'], span: 2 },
+      { name: 'desc', label: 'Description', type: 'textarea', span: 12 },
+      { name: 'points', label: 'Bullet points', type: 'tags', span: 12 },
+    ],
+  },
+  'cities:coverage': {
+    noun: 'statistic',
+    titleField: 'label',
+    fields: [
+      { name: 'value', label: 'Value', placeholder: '50', span: 3 },
+      { name: 'suffix', label: 'Suffix', placeholder: '+', help: 'Rendered in the accent colour.', span: 3 },
+      { name: 'label', label: 'Label', placeholder: 'CITIES COVERED', span: 6 },
+    ],
+  },
+  'cities:breadcrumb': {
+    noun: 'crumb',
+    titleField: 'label',
+    fields: [
+      { name: 'label', label: 'Label', span: 7 },
+      { name: 'href', label: 'Links to', help: 'Leave empty for the current page.', span: 5 },
+    ],
+  },
+  'cities:detail-hero': {
+    noun: 'hero button',
+    titleField: 'label',
+    fields: [
+      { name: 'label', label: 'Button text', span: 5 },
+      { name: 'href', label: 'Links to', help: 'A path, a full URL, or {{phone}} / {{whatsapp}}.', span: 4 },
+      { name: 'variant', label: 'Style', type: 'select', options: ['white', 'outline', 'whatsapp'], span: 3 },
+    ],
+  },
+  'cities:detail-hero-badges': {
+    noun: 'badge',
+    titleField: 'label',
+    fields: [
+      { name: 'icon', label: 'Icon', placeholder: '✅', span: 2 },
+      { name: 'label', label: 'Label', help: '{city} and {reviewCount} are replaced.', span: 10 },
+    ],
+  },
+  'cities:detail-documents': {
+    noun: 'document',
+    titleField: 'label',
+    fields: [
+      { name: 'icon', label: 'Icon', placeholder: '📄', span: 2 },
+      { name: 'label', label: 'Document name', span: 10 },
+    ],
+  },
+  'cities:detail-document-categories': {
+    noun: 'category',
+    titleField: 'name',
+    fields: [
+      { name: 'key', label: 'Key', help: 'Used in the tab id — keep it unique and URL-safe.', span: 3 },
+      { name: 'label', label: 'Tab label', placeholder: '🛂 Immigration', span: 4 },
+      { name: 'name', label: 'Category name', span: 3 },
+      { name: 'icon', label: 'Icon', span: 1 },
+      { name: 'tint', label: 'Tint', placeholder: '#dbeafe', span: 1 },
+    ],
+  },
+  'cities:detail-agency-cards': {
+    noun: 'credential',
+    titleField: 'title',
+    fields: [
+      { name: 'icon', label: 'Icon', span: 2 },
+      { name: 'title', label: 'Title', span: 10 },
+      { name: 'desc', label: 'Description', type: 'textarea', span: 12 },
+    ],
+  },
+  'cities:detail-notary-cards': {
+    noun: 'attestation service',
+    titleField: 'title',
+    fields: [
+      { name: 'icon', label: 'Icon', span: 2 },
+      { name: 'title', label: 'Service', span: 5 },
+      { name: 'desc', label: 'Price · turnaround', span: 5 },
+    ],
+  },
+  'cities:detail-visa-cards': {
+    noun: 'destination',
+    titleField: 'title',
+    fields: [
+      { name: 'icon', label: 'Flag', span: 2 },
+      { name: 'title', label: 'Destination', span: 10 },
+      { name: 'desc', label: 'What we handle', type: 'textarea', span: 12 },
+    ],
+  },
+  'cities:detail-legal-cards': {
+    noun: 'legal specialism',
+    titleField: 'title',
+    fields: [
+      { name: 'icon', label: 'Icon', span: 2 },
+      { name: 'title', label: 'Specialism', span: 10 },
+      { name: 'points', label: 'Document types', type: 'tags', span: 12 },
+    ],
+  },
+  'cities:detail-pricing': {
+    noun: 'price row',
+    titleField: 'service',
+    fields: [
+      { name: 'service', label: 'Service', span: 4 },
+      { name: 'badge', label: 'Badge', placeholder: 'POPULAR', span: 2 },
+      { name: 'price', label: 'Price', span: 3 },
+      { name: 'delivery', label: 'Delivery', span: 3 },
+      { name: 'includes', label: 'Includes', span: 12 },
+    ],
+  },
+  'cities:detail-why-choose': {
+    noun: 'reason',
+    titleField: 'title',
+    fields: [
+      { name: 'title', label: 'Title', span: 6 },
+      { name: 'titleWithLang', label: 'Title when a language is selected', help: '{lang} is replaced.', span: 6 },
+      { name: 'desc', label: 'Description', type: 'textarea', span: 12 },
+    ],
+  },
+  'cities:detail-faq': {
+    noun: 'question',
+    titleField: 'q',
+    fields: [
+      { name: 'q', label: 'Question', help: '{city} and {lang} are replaced.', span: 12 },
+      { name: 'a', label: 'Answer', type: 'textarea', span: 12 },
+    ],
+  },
+  'cities:detail-sidebar-pricing': {
+    noun: 'price row',
+    titleField: 'label',
+    fields: [
+      { name: 'label', label: 'Label', span: 8 },
+      { name: 'value', label: 'Price', span: 4 },
+    ],
+  },
+  'cities:detail-sidebar': {
+    noun: 'trust badge',
+    titleField: 'label',
+    fields: [{ name: 'label', label: 'Badge', span: 12 }],
   },
   'cities:regions': {
     noun: 'region',
@@ -142,22 +325,87 @@ const BY_SECTION: Record<string, ItemSpec> = {
 
 // ─── settings: per-section specs ────────────────────────────────────────────
 const SETTINGS: Record<string, Field[]> = {
-  'home:hero-badges': [
-    { name: 'badge', label: 'Hero badge line', span: 12 },
+  'home:hero': [
+    { name: 'badge', label: 'Badge pill above the heading', span: 12 },
+  ],
+  'home:quick-quote': [
+    { name: 'serviceLabel', label: 'Service field label', span: 4 },
+    { name: 'fromLabel', label: 'From-language label', span: 4 },
+    { name: 'toLabel', label: 'To-language label', span: 4 },
+    { name: 'fromDefault', label: 'From-language default', span: 3 },
+    { name: 'toDefault', label: 'To-language default', span: 3 },
+    { name: 'fromPlaceholder', label: 'From placeholder', span: 3 },
+    { name: 'toPlaceholder', label: 'To placeholder', span: 3 },
+    { name: 'pagesLabel', label: 'Pages label', span: 4 },
+    { name: 'docLabel', label: 'Document-type label', span: 4 },
+    { name: 'assignLabel', label: 'Assignment-type label', span: 4 },
+    { name: 'unitPage', label: 'Per-page suffix', placeholder: '/page', span: 4 },
+    { name: 'unitDoc', label: 'Per-document suffix', placeholder: '/doc', span: 4 },
+    { name: 'unitDay', label: 'Per-day suffix', placeholder: '/day', span: 4 },
+    { name: 'baseLabel', label: 'Base-price row label', span: 4 },
+    { name: 'gstLabel', label: 'Tax row label', span: 4 },
+    { name: 'gstRate', label: 'Tax rate (%)', type: 'number', span: 4 },
+    { name: 'totalLabel', label: 'Total row label', span: 12 },
+  ],
+  'home:interpreter-tabs': [
+    { name: 'stepsHeading', label: '"How it works" heading', span: 12 },
+  ],
+  'home:industries': [
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
+    { name: 'limit', label: 'How many to show', type: 'number', span: 4 },
+    { name: 'fallbackLabel', label: 'Label when an industry has no description', span: 4 },
+  ],
+  'home:gallery': [
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
+    { name: 'limit', label: 'How many to show', type: 'number', span: 4 },
+    { name: 'categoryLimit', label: 'How many filter chips', type: 'number', span: 4 },
+    { name: 'allLabel', label: '"All" chip label', help: 'Leave empty to drop the chip.', span: 6 },
+    { name: 'watermark', label: 'Thumbnail watermark', span: 6 },
+  ],
+  'home:testimonials': [
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
+    { name: 'defaultRole', label: 'Role shown when blank', span: 4 },
+    { name: 'defaultCity', label: 'City shown when blank', span: 4 },
+  ],
+  'home:quote': [
+    { name: 'source', label: 'Service list source', type: 'select', options: SOURCE_OPTIONS, span: 12 },
+    { name: 'nameLabel', label: 'Name label', span: 6 },
+    { name: 'namePlaceholder', label: 'Name placeholder', span: 6 },
+    { name: 'phoneLabel', label: 'Phone label', span: 6 },
+    { name: 'phonePlaceholder', label: 'Phone placeholder', span: 6 },
+    { name: 'serviceLabel', label: 'Service label', span: 6 },
+    { name: 'cityLabel', label: 'City label', span: 6 },
+    { name: 'cityPlaceholder', label: 'City placeholder', span: 6 },
+    { name: 'messageLabel', label: 'Message label', span: 6 },
+    { name: 'messagePlaceholder', label: 'Message placeholder', type: 'textarea', span: 12 },
+    { name: 'sendingLabel', label: 'Button text while sending', span: 6 },
+    { name: 'whatsappShortLabel', label: 'WhatsApp label on small screens', span: 6 },
+    { name: 'successMessage', label: 'Success message', type: 'textarea', span: 12 },
+    { name: 'nameError', label: 'Missing-name error', span: 6 },
+    { name: 'phoneError', label: 'Invalid-phone error', span: 6 },
+    { name: 'genericError', label: 'Rejected-submission error', span: 6 },
+    { name: 'networkError', label: 'Network-failure error', span: 6 },
   ],
   'home:services': [
     { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
-    { name: 'limit', label: 'How many to show', type: 'number', span: 4 },
+    { name: 'limit', label: 'Cards to show', type: 'number', span: 4 },
+    { name: 'sidebarLimit', label: 'Sidebar links to show', type: 'number', span: 4 },
     { name: 'sidebarHeading', label: 'Sidebar heading', span: 4 },
+    { name: 'linkLabel', label: 'Card link label', placeholder: 'View Details →', span: 4 },
+    { name: 'allLabel', label: '"See all" link', help: '{count} is replaced with the number of services.', span: 4 },
   ],
   'home:languages': [
-    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
-    { name: 'groupBy', label: 'Group by field', placeholder: 'cat', span: 4 },
-    { name: 'perGroup', label: 'Per group', type: 'number', span: 4 },
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 3 },
+    { name: 'columns', label: 'Columns', type: 'number', span: 3 },
+    { name: 'perColumn', label: 'Languages per column', type: 'number', span: 3 },
+    { name: 'columnHeading', label: 'Column heading', span: 3 },
   ],
   'home:cities': [
-    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 6 },
-    { name: 'limit', label: 'How many to show', type: 'number', span: 6 },
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
+    { name: 'limit', label: 'How many to show', type: 'number', span: 4 },
+    { name: 'defaultIcon', label: 'Icon when a city has none', span: 4 },
+    { name: 'moreIcon', label: '"More cities" icon', span: 4 },
+    { name: 'moreLabel', label: '"More cities" label', help: '{count} is replaced with the number not shown.', span: 8 },
   ],
   'home:faq': [
     { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 4 },
@@ -175,6 +423,26 @@ const SETTINGS: Record<string, Field[]> = {
   'services:faq': [
     { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 6 },
     { name: 'category', label: 'FAQ category', span: 6 },
+  ],
+  'cities:grid': [
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 6 },
+    { name: 'defaultIcon', label: 'Icon when a city has none', span: 6 },
+  ],
+  'cities:services': [
+    { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 6 },
+    { name: 'limit', label: 'How many to show', type: 'number', span: 6 },
+  ],
+  'cities:cta': [
+    { name: 'phoneButton', label: 'Show a call button with the phone number', type: 'boolean', span: 12 },
+  ],
+  'cities:detail-pricing': [
+    { name: 'columns', label: 'Table column headings', type: 'tags', help: 'Four headings, left to right.', span: 12 },
+  ],
+  'cities:detail-sidebar': [
+    { name: 'languageLimit', label: 'Languages listed', type: 'number', span: 4 },
+    { name: 'cityLimit', label: 'Other cities listed', type: 'number', span: 4 },
+    { name: 'reviewCount', label: 'Review count', help: 'Shown wherever {reviewCount} appears.', span: 4 },
+    { name: 'ratingLine', label: 'Rating line', span: 12 },
   ],
   'cities:faq': [
     { name: 'source', label: 'Data source', type: 'select', options: SOURCE_OPTIONS, span: 6 },
@@ -228,7 +496,10 @@ const GENERIC_SOURCE_SETTINGS: Field[] = [
 ];
 
 /** Kinds that never carry `items` — their content comes from a collection. */
-export const SOURCED_KINDS = new Set(['grid', 'cta', 'form', 'richtext']);
+// 'form' is deliberately absent: a form band can carry real items (the hero
+// calculator's assignment types) as well as pull a list from a source. Whether
+// it is sourced is decided by its `source` setting, not by its kind.
+export const SOURCED_KINDS = new Set(['grid', 'cta', 'richtext']);
 
 export function itemSpec(pageKey: string, sectionKey: string, kind: string): ItemSpec | null {
   return BY_SECTION[`${pageKey}:${sectionKey}`] || BY_KIND[kind] || null;
@@ -262,4 +533,8 @@ export const KIND_HELP: Record<string, string> = {
   cta: 'A call-to-action band: heading, subtitle and up to two buttons.',
   richtext: 'Free-form copy. Basic formatting HTML is allowed and sanitised.',
   form: 'A form band. The heading, subtitle and button text are editable here.',
+  hero: 'The hero band. Its eyebrow, heading and subtitle are the page-level Hero fields above; the badge pill and buttons are here.',
+'doc-categories': 'Tabbed document categories on every city page. Each row also carries its own document list.',
+  sidebar: 'The sidebar on every city page — its headings live under the city page template.',
+    'interpreter-tabs': 'The tabs under the interpreter band — one row per tab, each with its own panel copy.',
 };

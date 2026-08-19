@@ -4,6 +4,11 @@ import React, { useEffect, useState, useRef } from 'react';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../../lib/env';
 
+/** Mirrors the backend slugify in config/slug.js so the field can never
+ *  submit a shape the API will reject. */
+const slugify = (raw: string) =>
+  String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
 
 interface FAQ {
   q: string;
@@ -63,6 +68,8 @@ interface Service {
   id: string;
   name: string;
   key: string;
+  /** Admin-editable URL slug. `key` above stays fixed as the identifier. */
+  slug?: string;
   icon: string;
   description: string;
   price?: number | null;
@@ -89,6 +96,39 @@ export default function ServicesPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [uploadingHeroBg, setUploadingHeroBg] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Inline slug editing. `key` stays fixed as the identifier the site and the
+  // legacy script resolve against; only the URL slug changes.
+  const [slugEdit, setSlugEdit] = useState<{ id: string; value: string } | null>(null);
+  const [slugMsg, setSlugMsg] = useState<{ id: string; kind: 'ok' | 'err'; text: string } | null>(null);
+  const [slugSaving, setSlugSaving] = useState(false);
+
+  const saveSlug = async (svc: any, nextSlug: string) => {
+    const current = svc.slug || svc.key;
+    if (nextSlug.trim() === current) { setSlugEdit(null); return; }
+    setSlugSaving(true);
+    setSlugMsg(null);
+    try {
+      const res = await fetch(`${API_URL}/api/v1/services/${svc.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ slug: nextSlug.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSlugMsg({ id: svc.id, kind: 'ok', text: `URL is now /services/${data.data.slug}` });
+        setSlugEdit(null);
+        await fetchServices();
+      } else {
+        setSlugMsg({ id: svc.id, kind: 'err', text: data.message || 'Could not save the slug.' });
+      }
+    } catch {
+      setSlugMsg({ id: svc.id, kind: 'err', text: 'Could not reach the API.' });
+    } finally {
+      setSlugSaving(false);
+    }
+  };
 
   const [formData, setFormData] = useState<Service>({
     id: '',
@@ -450,6 +490,7 @@ export default function ServicesPage() {
       id: '',
       name: 'New Service',
       key: 'new-service',
+      slug: 'new-service',
       icon: '🌐',
       description: defaults.heroSub,
       price: 850,
@@ -475,6 +516,7 @@ export default function ServicesPage() {
       id: svc.id,
       name: svc.name,
       key: svc.key,
+      slug: svc.slug || svc.key,
       icon: svc.icon || '🌐',
       description: svc.description || defaults.heroSub,
       price: svc.price || 850,
@@ -701,6 +743,7 @@ export default function ServicesPage() {
 
       const payload = {
         ...formData,
+        slug: slugify(formData.slug || formData.key),
         price: formData.price ? Number(formData.price) : 850,
         title: formData.contentOverrides?.heroTitle || formData.title,
         description: formData.contentOverrides?.heroSub || formData.description,
@@ -808,7 +851,67 @@ export default function ServicesPage() {
                         {svc.name}
                         <div style={{ fontSize: '11px', color: 'var(--mu)', fontWeight: '400' }}>{svc.description?.substring(0, 75)}...</div>
                       </td>
-                      <td style={{ color: 'var(--bb)', fontFamily: 'monospace', fontSize: '13px' }}>/services/{svc.key}</td>
+                      <td style={{ fontFamily: 'monospace', fontSize: '13px', minWidth: '260px' }}>
+                        {slugEdit?.id === svc.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ color: 'var(--mu)' }}>/services/</span>
+                            <input
+                              autoFocus
+                              value={slugEdit.value}
+                              onChange={(e) => setSlugEdit({ id: svc.id, value: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveSlug(svc, slugEdit.value);
+                                if (e.key === 'Escape') { setSlugEdit(null); setSlugMsg(null); }
+                              }}
+                              style={{
+                                width: '130px', padding: '4px 7px', borderRadius: '5px',
+                                border: '1px solid var(--bb)', fontFamily: 'monospace', fontSize: '13px',
+                              }}
+                            />
+                            <button
+                              onClick={() => saveSlug(svc, slugEdit.value)}
+                              disabled={slugSaving}
+                              title="Save slug"
+                              style={{ border: 'none', background: 'var(--bd)', color: '#fff', borderRadius: '5px', padding: '4px 9px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                            >
+                              {slugSaving ? '…' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => { setSlugEdit(null); setSlugMsg(null); }}
+                              title="Cancel"
+                              style={{ border: '1px solid var(--br)', background: '#fff', color: 'var(--mu)', borderRadius: '5px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => { setSlugEdit({ id: svc.id, value: svc.slug || svc.key }); setSlugMsg(null); }}
+                            title="Click to change this page's URL"
+                            style={{
+                              border: 'none', background: 'none', padding: 0, cursor: 'pointer',
+                              color: 'var(--bb)', fontFamily: 'monospace', fontSize: '13px',
+                              display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            }}
+                          >
+                            /services/{svc.slug || svc.key}
+                            <span style={{ fontSize: '11px', opacity: 0.55 }}>✏️</span>
+                          </button>
+                        )}
+                        {slugMsg?.id === svc.id && (
+                          <div style={{
+                            fontFamily: 'inherit', fontSize: '11.5px', marginTop: '5px', lineHeight: 1.45,
+                            color: slugMsg.kind === 'ok' ? '#166534' : '#b91c1c',
+                          }}>
+                            {slugMsg.text}
+                          </div>
+                        )}
+                        {(svc.slug && svc.slug !== svc.key) && (
+                          <div style={{ fontFamily: 'inherit', fontSize: '10.5px', color: 'var(--mu)', marginTop: '3px' }}>
+                            id: <code>{svc.key}</code> (fixed)
+                          </div>
+                        )}
+                      </td>
                       <td style={{ fontWeight: '700', color: 'var(--bd)' }}>₹{svc.price || 850}</td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button onClick={() => handleOpenEdit(svc)} style={{ background: 'none', border: 'none', color: 'var(--bb)', cursor: 'pointer', fontWeight: '700', marginRight: '14px', fontSize: '13px' }}>
@@ -839,7 +942,7 @@ export default function ServicesPage() {
                   {editingService ? `✏️ Edit Service: ${formData.name}` : '➕ Add New Service'}
                 </h3>
                 <p style={{ fontSize: '12px', color: 'var(--mu)', margin: '2px 0 0 0' }}>
-                  Slug URL: <code>/services/{formData.key || 'service-name'}</code>
+                  Slug URL: <code>/services/{formData.slug || formData.key || 'service-name'}</code>
                 </p>
               </div>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', color: 'var(--mu)', cursor: 'pointer', fontWeight: 'bold', padding: '4px 8px' }}>
@@ -889,8 +992,18 @@ export default function ServicesPage() {
                           <input style={inputStyle} value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
                         </div>
                         <div>
-                          <label style={labelStyle}>Slug (URL Key)</label>
-                          <input style={inputStyle} value={formData.key} onChange={e => setFormData({ ...formData, key: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-') })} required />
+                          <label style={labelStyle}>Slug (URL)</label>
+                          <input
+                            style={inputStyle}
+                            value={formData.slug ?? formData.key}
+                            onChange={e => {
+                              const next = e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-');
+                              // `key` is the immutable identifier the site resolves against and the
+                              // API refuses to change, so only a brand-new service sets it here.
+                              setFormData(prev => ({ ...prev, slug: next, ...(editingService ? {} : { key: next }) }));
+                            }}
+                            required
+                          />
                         </div>
                         <div>
                           <label style={labelStyle}>Icon Emoji</label>
