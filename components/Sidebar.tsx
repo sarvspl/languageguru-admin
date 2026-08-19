@@ -31,6 +31,7 @@ export default function Sidebar() {
     { icon: '🏙️', label: 'Cities', sub: '/dashboard/cities' },
     { icon: '⭐', label: 'Testimonials', sub: '/dashboard/testimonials' },
     { icon: '❓', label: 'FAQs', sub: '/dashboard/faqs' },
+    { icon: '🧩', label: 'Site Pages & Slugs', sub: '/dashboard/site-pages' },
     { icon: '📃', label: 'CMS Pages', sub: '/dashboard/pages' },
     { icon: 'ℹ️', label: 'About Page', sub: '/dashboard/about' },
     { icon: '📞', label: 'Contact Page', sub: '/dashboard/contact' },
