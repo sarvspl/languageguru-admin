@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
 type TabId = 'hero_channels' | 'hours' | 'certs_form' | 'seo';
 
@@ -58,7 +59,7 @@ export default function ContactManagementPage() {
   const fetchContact = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/contact`, { credentials: 'include' });
       const data = await res.json();
       if (data.success && data.data) {
@@ -84,7 +85,7 @@ export default function ContactManagementPage() {
     setSaving(true);
     setSaveSuccessMsg('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const payload = {
         ...formData,
         certsList: formData.certBadges

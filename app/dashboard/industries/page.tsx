@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
 export default function IndustriesManagement() {
   const [industries, setIndustries] = useState<any[]>([]);
@@ -21,7 +22,7 @@ export default function IndustriesManagement() {
   const fetchIndustries = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/industries/all`, { credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/v1/industries/all`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setIndustries(data.data);
@@ -39,7 +40,7 @@ export default function IndustriesManagement() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const url = editingId 
         ? `${apiUrl}/api/v1/industries/${editingId}`
         : `${apiUrl}/api/v1/industries`;
@@ -68,7 +69,7 @@ export default function IndustriesManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this industry?')) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/industries/${id}`, {
         method: 'DELETE',
         credentials: 'include'

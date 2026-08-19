@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
 export default function TestimonialsManagement() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
@@ -23,7 +24,7 @@ export default function TestimonialsManagement() {
   const fetchTestimonials = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/testimonials/all`, {
+      const res = await fetch(`${API_URL}/api/v1/testimonials/all`, {
         credentials: 'include'
       });
       const data = await res.json();
@@ -43,7 +44,7 @@ export default function TestimonialsManagement() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const url = editingId 
         ? `${apiUrl}/api/v1/testimonials/${editingId}`
         : `${apiUrl}/api/v1/testimonials`;
@@ -72,7 +73,7 @@ export default function TestimonialsManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this testimonial?')) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/testimonials/${id}`, {
         method: 'DELETE',
         credentials: 'include'

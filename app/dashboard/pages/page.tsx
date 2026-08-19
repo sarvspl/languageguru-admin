@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL, siteLink } from '../../../lib/env';
 
 export default function PagesManagement() {
   const [pages, setPages] = useState<any[]>([]);
@@ -22,7 +23,7 @@ export default function PagesManagement() {
   const fetchPages = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/pages/admin/all`, {
+      const res = await fetch(`${API_URL}/api/v1/pages/admin/all`, {
         credentials: 'include'
       });
       const data = await res.json();
@@ -42,7 +43,7 @@ export default function PagesManagement() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const url = editingId 
         ? `${apiUrl}/api/v1/pages/${editingId}`
         : `${apiUrl}/api/v1/pages`;
@@ -71,7 +72,7 @@ export default function PagesManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this page?')) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/pages/${id}`, {
         method: 'DELETE',
         credentials: 'include'
@@ -162,7 +163,7 @@ export default function PagesManagement() {
                   ✏️ Edit Privacy Policy
                 </button>
                 <a
-                  href="http://localhost:3000/privacy"
+                  href={siteLink('privacy')}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ background: '#fff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
@@ -192,7 +193,7 @@ export default function PagesManagement() {
                   ✏️ Edit Terms of Service
                 </button>
                 <a
-                  href="http://localhost:3000/terms"
+                  href={siteLink('terms')}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ background: '#fff', color: '#b45309', border: '1px solid #fde68a', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
@@ -261,7 +262,7 @@ export default function PagesManagement() {
                         </td>
                         <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <a
-                            href={`http://localhost:3000/${p.slug}`}
+                            href={siteLink(p.slug)}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ color: '#10b981', textDecoration: 'none', fontWeight: 600, marginRight: '12px' }}
@@ -361,12 +362,12 @@ export default function PagesManagement() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--br)' }}>
                 {editingId && (
                   <a
-                    href={`http://localhost:3000/${formData.slug}`}
+                    href={siteLink(formData.slug)}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}
                   >
-                    🔗 Preview live URL: localhost:3000/{formData.slug}
+                    🔗 Preview live URL: {siteLink(formData.slug)}
                   </a>
                 )}
                 <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 interface City {
   id: string;

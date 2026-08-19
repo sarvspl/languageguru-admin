@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import { API_URL, SITE_URL } from '../lib/env';
 
 export default function TopNav({ title }: { title: string }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const handleLogout = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       await fetch(`${API_URL}/api/v1/auth/logout`, { 
         method: 'POST', 
         credentials: 'include' 
@@ -92,7 +92,7 @@ export default function TopNav({ title }: { title: string }) {
             padding: '6px 10px',
             borderRadius: '6px'
           }}
-          onClick={() => { window.open('http://localhost:3000', '_blank'); }}
+          onClick={() => { window.open(SITE_URL, '_blank'); }}
           title="View Live Website"
         >
           <span>🌐</span> <span className="top-link-text">View Site</span>

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
 const GALLERY = [
   /* Birth / Personal Documents */
@@ -100,7 +101,7 @@ export default function HomeSectionsManagement() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const [secRes, svcRes, wcRes, setRes] = await Promise.all([
         fetch(`${apiUrl}/api/v1/home-sections`, { credentials: 'include' }),
         fetch(`${apiUrl}/api/v1/services/all`, { credentials: 'include' }),
@@ -144,7 +145,7 @@ export default function HomeSectionsManagement() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const url = editingId ? `${apiUrl}/api/v1/home-sections/${editingId}` : `${apiUrl}/api/v1/home-sections`;
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
@@ -168,7 +169,7 @@ export default function HomeSectionsManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this section?')) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/home-sections/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) fetchAll();
     } catch (error) {
@@ -183,7 +184,7 @@ export default function HomeSectionsManagement() {
     const fd = new FormData();
     fd.append('image', file);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/upload`, {
         method: 'POST', credentials: 'include', body: fd
       });
@@ -269,7 +270,7 @@ export default function HomeSectionsManagement() {
       delete (payload as any).id;
       delete (payload as any).name;
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/services/${serviceFormData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -303,7 +304,7 @@ export default function HomeSectionsManagement() {
   const handleDeleteWhyChoose = async (id: string) => {
     if (!confirm('Are you sure you want to delete this feature?')) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/why-choose/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) fetchAll();
     } catch (error) {
@@ -314,7 +315,7 @@ export default function HomeSectionsManagement() {
   const handleSaveWhyChoose = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const url = editingId ? `${apiUrl}/api/v1/why-choose/${editingId}` : `${apiUrl}/api/v1/why-choose`;
       const method = editingId ? 'PUT' : 'POST';
       const res = await fetch(url, {
@@ -338,7 +339,7 @@ export default function HomeSectionsManagement() {
     setSavingHeader(true);
     setHeaderSavedMsg('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -365,7 +366,7 @@ export default function HomeSectionsManagement() {
     setSavingHeader(true);
     setHeaderSavedMsg('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -394,7 +395,7 @@ export default function HomeSectionsManagement() {
     const fd = new FormData();
     fd.append('image', file);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/upload`, {
         method: 'POST', credentials: 'include', body: fd
       });
@@ -460,7 +461,7 @@ export default function HomeSectionsManagement() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     {heroSettings.heroBgImage ? (
                       <div style={{ width: '120px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--br)', position: 'relative' }}>
-                        <img src={heroSettings.heroBgImage.startsWith('http') ? heroSettings.heroBgImage : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${heroSettings.heroBgImage}`} alt="Hero Bg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={heroSettings.heroBgImage.startsWith('http') ? heroSettings.heroBgImage : `${API_URL}${heroSettings.heroBgImage}`} alt="Hero Bg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                     ) : (
                       <div style={{ width: '120px', height: '80px', borderRadius: '8px', background: '#f1f5f9', border: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: '#94a3b8' }}>
@@ -806,7 +807,7 @@ export default function HomeSectionsManagement() {
                     <input type="file" style={{ display: 'none' }} accept="image/*" onChange={handleImageUpload} />
                   </label>
                 </div>
-                {formData.imageUrl && <img src={formData.imageUrl.startsWith('http') ? formData.imageUrl : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}${formData.imageUrl}`} alt="preview" style={{ marginTop: '8px', maxHeight: '80px', borderRadius: '4px' }} />}
+                {formData.imageUrl && <img src={formData.imageUrl.startsWith('http') ? formData.imageUrl : `${API_URL}${formData.imageUrl}`} alt="preview" style={{ marginTop: '8px', maxHeight: '80px', borderRadius: '4px' }} />}
               </div>
               <div>
                 <label style={labelStyle}>Button Text (optional)</label>

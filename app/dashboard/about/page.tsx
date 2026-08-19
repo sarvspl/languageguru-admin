@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
 type TabId = 'hero_story' | 'stats' | 'features' | 'certs' | 'cta_seo';
 
@@ -65,7 +66,7 @@ export default function AboutManagementPage() {
   const fetchAbout = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/about`, { credentials: 'include' });
       const data = await res.json();
       if (data.success && data.data) {
@@ -92,7 +93,7 @@ export default function AboutManagementPage() {
     setSaving(true);
     setSaveSuccessMsg('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const payload = {
         ...formData,
         whyChooseItems: formData.whyChooseList,

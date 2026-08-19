@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL } from '../../../lib/env';
 
 export default function FaqsManagement() {
   const [faqs, setFaqs] = useState<any[]>([]);
@@ -21,7 +22,7 @@ export default function FaqsManagement() {
   const fetchFaqs = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/faqs/all`, {
+      const res = await fetch(`${API_URL}/api/v1/faqs/all`, {
         credentials: 'include'
       });
       const data = await res.json();
@@ -41,7 +42,7 @@ export default function FaqsManagement() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const url = editingId 
         ? `${apiUrl}/api/v1/faqs/${editingId}`
         : `${apiUrl}/api/v1/faqs`;
@@ -70,7 +71,7 @@ export default function FaqsManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this FAQ?')) return;
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/faqs/${id}`, {
         method: 'DELETE',
         credentials: 'include'

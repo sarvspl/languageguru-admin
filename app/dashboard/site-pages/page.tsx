@@ -5,8 +5,8 @@ import TopNav from '@/components/TopNav';
 import ItemsEditor from './ItemsEditor';
 import SettingsEditor from './SettingsEditor';
 import { itemSpec, settingsSpec, KIND_HELP, SOURCED_KINDS } from './sectionSchemas';
+import { API_URL } from '../../../lib/env';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 type Section = {
   id?: string;

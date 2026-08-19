@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
+import { API_URL, siteLink } from '../../../lib/env';
 
 type MainView = 'cms' | 'crm';
 type CmsTab = 'hero_stats' | 'industries' | 'clients' | 'reviews' | 'cta_seo';
@@ -87,7 +88,7 @@ export default function ClientsManagementPage() {
   const fetchCmsData = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/clients-page`, { credentials: 'include' });
       const json = await res.json();
       if (json.success && json.data) {
@@ -109,7 +110,7 @@ export default function ClientsManagementPage() {
   const fetchCrmData = async () => {
     setCrmLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const res = await fetch(`${apiUrl}/api/v1/quotes`, { credentials: 'include' });
       const data = await res.json();
       if (data.success && Array.isArray(data.data)) {
@@ -159,7 +160,7 @@ export default function ClientsManagementPage() {
     setSaving(true);
     setSaveSuccessMsg('');
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = API_URL;
       const payload = {
         ...formData,
         industriesList: formData.industries,
@@ -805,12 +806,12 @@ export default function ClientsManagementPage() {
                   {/* SAVE BUTTON BAR */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--br)' }}>
                     <a
-                      href="http://localhost:3000/clients"
+                      href={siteLink('clients')}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ fontSize: '13px', color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}
                     >
-                      🔗 Preview live page: localhost:3000/clients
+                      🔗 Preview live page: {siteLink('clients')}
                     </a>
                     <button
                       type="submit"

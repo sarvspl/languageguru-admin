@@ -6,7 +6,9 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "predev": "node scripts/check-env.mjs",
+    "prebuild": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "html2canvas": "^1.4.1",
