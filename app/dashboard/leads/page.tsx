@@ -28,6 +28,34 @@ const CRM_STAGES = [
   { key: 'CANCELLED', label: 'Cancelled', color: '#fee2e2', dot: '#dc2626' }
 ];
 
+const formatServiceName = (keyOrName: string) => {
+  if (!keyOrName) return 'Certified Translation';
+  const numericMap: Record<string, string> = {
+    '850': 'Certified Translation',
+    '899': 'Website Localization',
+    '999': 'Notarized Translation',
+    '1400': 'Apostille & Attestation',
+    '2500': 'Interpreter Service',
+    '4500': 'Interpreter Service (Half-Day)',
+    '7500': 'Interpreter Service (Full-Day)',
+    'certified': 'Certified Translation',
+    'legal': 'Legal Translation',
+    'medical': 'Medical Translation',
+    'technical': 'Technical Translation',
+    'business': 'Business Translation',
+    'academic': 'Academic Translation',
+    'interpretation': 'Interpretation Service',
+    'apostille': 'MEA Apostille',
+    'attestation': 'Embassy Attestation',
+    'localization': 'Website Localization'
+  };
+  const lower = keyOrName.toLowerCase().trim();
+  if (numericMap[lower]) {
+    return numericMap[lower];
+  }
+  return keyOrName.split(' — ')[0].split(' - ')[0].trim();
+};
+
 export default function LeadsCRMPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,6 +148,40 @@ export default function LeadsCRMPage() {
     <>
       <TopNav title={getTitle()} />
       
+      {/* Category Tabs */}
+      <div style={{ padding: '0 24px', marginTop: '16px', display: 'flex', gap: '8px', overflowX: 'auto' }}>
+        <button 
+          onClick={() => setTypeFilter('')}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--br)', background: typeFilter === '' ? 'var(--ac)' : '#fff', color: typeFilter === '' ? '#fff' : 'var(--tm)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          All Leads
+        </button>
+        <button 
+          onClick={() => setTypeFilter('translation')}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--br)', background: typeFilter === 'translation' ? 'var(--ac)' : '#fff', color: typeFilter === 'translation' ? '#fff' : 'var(--tm)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          📝 Translation
+        </button>
+        <button 
+          onClick={() => setTypeFilter('interpreter')}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--br)', background: typeFilter === 'interpreter' ? 'var(--ac)' : '#fff', color: typeFilter === 'interpreter' ? '#fff' : 'var(--tm)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          🎤 Interpreter
+        </button>
+        <button 
+          onClick={() => setTypeFilter('apostille')}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--br)', background: typeFilter === 'apostille' ? 'var(--ac)' : '#fff', color: typeFilter === 'apostille' ? '#fff' : 'var(--tm)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          📌 Apostille
+        </button>
+        <button 
+          onClick={() => setTypeFilter('training')}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--br)', background: typeFilter === 'training' ? 'var(--ac)' : '#fff', color: typeFilter === 'training' ? '#fff' : 'var(--tm)', fontWeight: '600', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+        >
+          🎓 Training
+        </button>
+      </div>
+      
       <div className="adm-cnt" style={{ padding: '24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column' }}>
         
         {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
@@ -156,7 +218,7 @@ export default function LeadsCRMPage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: 'var(--tm)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span>📞</span> {lead.phone}</div>
                           {lead.email && <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span>✉</span> {lead.email}</div>}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span>🎯</span> {lead.serviceKey || 'General'}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span>🎯</span> {formatServiceName(lead.serviceKey)}</div>
                           {(lead.sourceLang || lead.targetLang) && (
                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span>🌐</span> {lead.sourceLang || 'Any'} → {lead.targetLang || 'Any'}</div>
                           )}

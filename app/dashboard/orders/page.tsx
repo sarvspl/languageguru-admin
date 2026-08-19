@@ -49,24 +49,46 @@ export default function OrdersPage() {
       
       if (!servicesData.success) throw new Error(servicesData.message || 'Failed to fetch services');
 
+      // Fetch Industries
+      const industriesRes = await fetch(`${API_URL}/api/v1/industries/all`, { credentials: 'include' });
+      const industriesData = await industriesRes.json();
+      
+      if (!industriesData.success) throw new Error(industriesData.message || 'Failed to fetch industries');
+
       const services: Service[] = servicesData.data;
+      const industries: any[] = industriesData.data;
       const quotes: Quote[] = quotesData.data;
 
       // Join data and calculate financial value
       const processedOrders: Order[] = quotes.map(quote => {
+        // Find if it's a specific service
         const matchingService = services.find(s => 
           s.key === quote.serviceKey || 
           (quote.serviceKey && s.name && quote.serviceKey.toLowerCase().includes(s.name.toLowerCase())) ||
           (quote.serviceKey && s.key && quote.serviceKey.toLowerCase().includes(s.key.toLowerCase()))
         );
+
+        // Find if it's a specific industry
+        const matchingIndustry = industries.find(ind => 
+          ind.svc === quote.serviceKey || ind.name === quote.serviceKey
+        );
         
-        // Default to a base price of 0 if service pricing isn't found
-        const unitPrice = matchingService?.price || 0; 
+        let resolvedServiceName = quote.serviceKey || 'General Translation';
+        let unitPrice = 0;
+
+        if (matchingService) {
+          resolvedServiceName = matchingService.name;
+          unitPrice = matchingService.price || 850; // Fallback to base rate
+        } else if (matchingIndustry) {
+          resolvedServiceName = `${matchingIndustry.name} Translation`;
+          unitPrice = 850; // Fallback to base rate for industries
+        }
+
         const estimatedValue = unitPrice * (quote.pages || 1);
 
         return {
           ...quote,
-          serviceName: matchingService?.name || quote.serviceKey || 'General Translation',
+          serviceName: resolvedServiceName,
           unitPrice,
           estimatedValue
         };

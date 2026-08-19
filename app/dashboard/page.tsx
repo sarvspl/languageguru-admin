@@ -19,6 +19,34 @@ interface Quote {
   createdAt: string;
 }
 
+const formatServiceName = (keyOrName: string) => {
+  if (!keyOrName) return 'Certified Translation';
+  const numericMap: Record<string, string> = {
+    '850': 'Certified Translation',
+    '899': 'Website Localization',
+    '999': 'Notarized Translation',
+    '1400': 'Apostille & Attestation',
+    '2500': 'Interpreter Service',
+    '4500': 'Interpreter Service (Half-Day)',
+    '7500': 'Interpreter Service (Full-Day)',
+    'certified': 'Certified Translation',
+    'legal': 'Legal Translation',
+    'medical': 'Medical Translation',
+    'technical': 'Technical Translation',
+    'business': 'Business Translation',
+    'academic': 'Academic Translation',
+    'interpretation': 'Interpretation Service',
+    'apostille': 'MEA Apostille',
+    'attestation': 'Embassy Attestation',
+    'localization': 'Website Localization'
+  };
+  const lower = keyOrName.toLowerCase().trim();
+  if (numericMap[lower]) {
+    return numericMap[lower];
+  }
+  return keyOrName.split(' — ')[0].split(' - ')[0].trim();
+};
+
 export default function DashboardOverview() {
   const currentDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -46,14 +74,22 @@ export default function DashboardOverview() {
     fetch(`${API_URL}/api/v1/dashboard/stats`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
-        if (data.success) setDbStats(data.data);
+        if (data.success) {
+          setDbStats(data.data);
+          if (Array.isArray(data.data?.recentQuotes) && data.data.recentQuotes.length > 0) {
+            setRecentQuotes(data.data.recentQuotes.slice(0, 5));
+            setQuotesLoading(false);
+          }
+        }
       })
       .catch(err => console.error('Error fetching stats:', err));
 
     fetch(`${API_URL}/api/v1/quotes`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
-        if (data.success) setRecentQuotes(data.data.slice(0, 5));
+        if (data.success && Array.isArray(data.data)) {
+          setRecentQuotes(data.data.slice(0, 5));
+        }
       })
       .catch(err => console.error('Error fetching quotes:', err))
       .finally(() => setQuotesLoading(false));
@@ -163,7 +199,7 @@ export default function DashboardOverview() {
                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bp)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', flexShrink: 0 }}>📋</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: '700', fontSize: '12.5px', color: 'var(--bd)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q.name}</div>
-                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>{q.phone} · {q.serviceKey || 'General'}</div>
+                      <div style={{ fontSize: '11px', color: '#9ca3af' }}>{q.phone} · {formatServiceName(q.serviceKey)}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <span style={{ background: sc.bg, color: sc.tc, fontSize: '10px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px', display: 'block', marginBottom: '2px' }}>{q.status}</span>

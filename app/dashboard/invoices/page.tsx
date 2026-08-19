@@ -13,6 +13,8 @@ interface Quote {
   serviceKey: string;
   status: string;
   pages: number;
+  sourceLang?: string;
+  targetLang?: string;
   createdAt: string;
 }
 

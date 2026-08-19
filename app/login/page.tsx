@@ -16,12 +16,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Send credentials to our Express backend
-      const res = await fetch('http://localhost:5000/api/v1/auth/login', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${API_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: username.trim(), password: password.trim() }),
       });
 
       const data = await res.json();

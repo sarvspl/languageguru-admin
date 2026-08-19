@@ -27,6 +27,25 @@ type SettingsData = {
   heroSubtitle: string;
   whatsappNumber: string;
   maintenanceMode: boolean;
+  bankName: string;
+  bankAccountName: string;
+  bankAccountNo: string;
+  bankIFSC: string;
+  bankBranch: string;
+  upiId: string;
+  paypalEmail: string;
+  heroBgImage: string;
+  stat1Value: string;
+  stat1Label: string;
+  stat2Value: string;
+  stat2Label: string;
+  stat3Value: string;
+  stat3Label: string;
+  stat4Value: string;
+  stat4Label: string;
+  whyChooseTag: string;
+  whyChooseTitle: string;
+  whyChooseSubtitle: string;
 };
 
 type AdminProfile = {
@@ -59,14 +78,34 @@ const defaultSettings: SettingsData = {
   heroSubtitle: 'ISO 9001:2015 Certified · 25+ Years Experience · 100+ Languages',
   whatsappNumber: '+919312690490',
   maintenanceMode: false,
+  bankName: 'Axis Bank',
+  bankAccountName: 'Language Guru Pvt Ltd',
+  bankAccountNo: '921010033967410',
+  bankIFSC: 'UTIB0000063',
+  bankBranch: 'Janakpuri, New Delhi',
+  upiId: 'languageguru@axisbank',
+  paypalEmail: 'languageguru21@gmail.com',
+  heroBgImage: '',
+  stat1Value: '100+',
+  stat1Label: 'Languages',
+  stat2Value: '10,000+',
+  stat2Label: 'Happy Clients',
+  stat3Value: '20+',
+  stat3Label: 'Years Experience',
+  stat4Value: '150+',
+  stat4Label: 'Indian Cities',
+  whyChooseTag: 'Why Choose Us',
+  whyChooseTitle: 'Why Choose Language Guru for <em>Certified Translation</em>',
+  whyChooseSubtitle: 'ISO-9001:2015 and ISO 17100:2015 certified · MSME registered · MEA-empanelled · 10,000+ clients · Embassy-accepted translations guaranteed.',
 };
 
-type TabId = 'company' | 'social' | 'operations' | 'seo' | 'branding' | 'security' | 'system';
+type TabId = 'company' | 'social' | 'operations' | 'bank' | 'seo' | 'branding' | 'security' | 'system';
 
 const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'company', icon: '🏢', label: 'Company Info' },
   { id: 'social', icon: '📱', label: 'Social Media' },
   { id: 'operations', icon: '⚙️', label: 'Operations' },
+  { id: 'bank', icon: '🏦', label: 'Bank Details' },
   { id: 'seo', icon: '🔍', label: 'SEO & Meta' },
   { id: 'branding', icon: '🎨', label: 'Branding & UI' },
   { id: 'security', icon: '🔐', label: 'Admin Security' },
@@ -86,6 +125,7 @@ export default function SettingsPage() {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
@@ -134,6 +174,33 @@ export default function SettingsPage() {
       showToast('Network error saving settings.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setUploadingImage(true);
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch(`${API_URL}/api/v1/upload`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSettings(prev => ({ ...prev, heroBgImage: data.url }));
+        showToast('Image uploaded successfully! (Don\'t forget to save)');
+      } else {
+        showToast(data.message || 'Failed to upload.', 'error');
+      }
+    } catch {
+      showToast('Network error during upload.', 'error');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -270,7 +337,7 @@ export default function SettingsPage() {
               <div style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Control Panel</div>
             </div>
             <div className="tab-container">
-              {TABS.map(tab => (
+              {TABS.filter(t => t.id !== 'branding').map(tab => (
                 <button
                   key={tab.id}
                   className={`settings-tab ${activeTab === tab.id ? 'active' : ''}`}
@@ -347,6 +414,23 @@ export default function SettingsPage() {
               </>
             )}
 
+            {/* ─── BANK DETAILS ───────────────────────────────────────── */}
+            {activeTab === 'bank' && (
+              <div className="section-card">
+                <div className="section-title">🏦 Bank & Payment Details</div>
+                <div className="section-subtitle">Account details displayed on quotes, invoices, and payment pages.</div>
+                <div className="grid-2">
+                  {inp('Bank Name', 'bankName', 'text', 'Axis Bank')}
+                  {inp('Account Name', 'bankAccountName', 'text', 'Language Guru Pvt Ltd')}
+                  {inp('Account Number', 'bankAccountNo', 'text', '921010033967410')}
+                  {inp('IFSC Code', 'bankIFSC', 'text', 'UTIB0000063')}
+                  {inp('Branch Name', 'bankBranch', 'text', 'Janakpuri, New Delhi')}
+                  {inp('UPI ID', 'upiId', 'text', 'languageguru@axisbank')}
+                </div>
+                {inp('PayPal Email', 'paypalEmail', 'email', 'languageguru21@gmail.com')}
+              </div>
+            )}
+
             {/* ─── SEO ────────────────────────────────────────── */}
             {activeTab === 'seo' && (
               <div className="section-card">
@@ -359,22 +443,6 @@ export default function SettingsPage() {
                 {textarea('Meta Description (Google Snippet)', 'metaDesc', 3)}
                 <div style={{ fontSize: '12px', color: settings.metaDesc.length > 160 ? '#dc2626' : '#16a34a', marginTop: '-14px', marginBottom: '0', fontWeight: '600' }}>
                   {settings.metaDesc.length > 160 ? '⚠️' : '✅'} Recommended: 120–160 characters. Current: {settings.metaDesc.length} chars
-                </div>
-              </div>
-            )}
-
-            {/* ─── BRANDING ───────────────────────────────────── */}
-            {activeTab === 'branding' && (
-              <div className="section-card">
-                <div className="section-title">🎨 Branding & Homepage UI</div>
-                <div className="section-subtitle">Directly controls the text content shown on your live website homepage.</div>
-                {inp('Homepage Hero Heading (Main Headline)', 'heroHeading', 'text', 'Certified Translation Services in Delhi')}
-                {inp('Homepage Hero Subtitle (Trust Badges)', 'heroSubtitle', 'text', 'ISO 9001:2015 Certified · 25+ Years Experience · 100+ Languages')}
-                <div style={{ padding: '16px', background: '#f0f7ff', borderRadius: '10px', border: '1.5px solid #bfdbfe' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--bd)', marginBottom: '8px' }}>🔗 Live Preview Note</div>
-                  <p style={{ fontSize: '13px', color: 'var(--mu)', lineHeight: '1.7', margin: 0 }}>
-                    After saving, the frontend site must read these values from the API to display them. Currently these control the admin panel display. To wire them to the live site, the frontend components can call <code style={{ background: '#e8f3fc', padding: '2px 6px', borderRadius: '4px', fontSize: '12px' }}>/api/v1/settings</code> on load.
-                  </p>
                 </div>
               </div>
             )}

@@ -21,7 +21,7 @@ export default function IndustriesManagement() {
   const fetchIndustries = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/industries/all`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/industries/all`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setIndustries(data.data);
@@ -49,6 +49,7 @@ export default function IndustriesManagement() {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(formData)
       });
       
@@ -69,7 +70,8 @@ export default function IndustriesManagement() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/v1/industries/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       });
       if (res.ok) {
         fetchIndustries();

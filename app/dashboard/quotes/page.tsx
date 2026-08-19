@@ -20,6 +20,34 @@ interface Quote {
   createdAt: string;
 }
 
+const formatServiceName = (keyOrName: string) => {
+  if (!keyOrName) return 'Certified Translation';
+  const numericMap: Record<string, string> = {
+    '850': 'Certified Translation',
+    '899': 'Website Localization',
+    '999': 'Notarized Translation',
+    '1400': 'Apostille & Attestation',
+    '2500': 'Interpreter Service',
+    '4500': 'Interpreter Service (Half-Day)',
+    '7500': 'Interpreter Service (Full-Day)',
+    'certified': 'Certified Translation',
+    'legal': 'Legal Translation',
+    'medical': 'Medical Translation',
+    'technical': 'Technical Translation',
+    'business': 'Business Translation',
+    'academic': 'Academic Translation',
+    'interpretation': 'Interpretation Service',
+    'apostille': 'MEA Apostille',
+    'attestation': 'Embassy Attestation',
+    'localization': 'Website Localization'
+  };
+  const lower = keyOrName.toLowerCase().trim();
+  if (numericMap[lower]) {
+    return numericMap[lower];
+  }
+  return keyOrName.split(' — ')[0].split(' - ')[0].trim();
+};
+
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +148,7 @@ export default function QuotesPage() {
                         <div style={{ fontSize: '12px', color: 'var(--mu)' }}>{quote.email} · {quote.phone || 'No Phone'}</div>
                       </td>
                       <td>
-                        <div style={{ fontWeight: '600', color: 'var(--bd)' }}>{quote.serviceKey || 'Translation'}</div>
+                        <div style={{ fontWeight: '600', color: 'var(--bd)' }}>{formatServiceName(quote.serviceKey)}</div>
                         <div style={{ fontSize: '12px', color: 'var(--mu)' }}>{quote.sourceLang || 'EN'} → {quote.targetLang || 'DE'}</div>
                       </td>
                       <td>
@@ -168,7 +196,7 @@ export default function QuotesPage() {
               <div><strong>Email:</strong> {selectedQuote.email}</div>
               <div><strong>Phone:</strong> {selectedQuote.phone || 'N/A'}</div>
               <div><strong>Status:</strong> {selectedQuote.status}</div>
-              <div><strong>Service:</strong> {selectedQuote.serviceKey || 'Translation'}</div>
+              <div><strong>Service:</strong> {formatServiceName(selectedQuote.serviceKey)}</div>
               <div><strong>Languages:</strong> {selectedQuote.sourceLang || 'EN'} → {selectedQuote.targetLang || 'DE'}</div>
               <div><strong>Pages:</strong> {selectedQuote.pages || 1}</div>
               <div><strong>Interpreter:</strong> {selectedQuote.isInterpreter ? 'Yes' : 'No'}</div>

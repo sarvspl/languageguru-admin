@@ -6,8 +6,17 @@ export default function TopNav({ title }: { title: string }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   const handleLogout = async () => {
-    await fetch('http://localhost:5000/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
-    window.location.href = '/login';
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      await fetch(`${API_URL}/api/v1/auth/logout`, { 
+        method: 'POST', 
+        credentials: 'include' 
+      });
+    } catch (err) {
+      console.error('Logout request failed:', err);
+    } finally {
+      window.location.href = '/login';
+    }
   };
 
   const triggerMobileSidebar = () => {
