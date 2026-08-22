@@ -283,6 +283,7 @@ Built-in pages are unpublished instead of deleted, so their content is kept.`)) 
           heroTag: draft.heroTag,
           heroTitle: draft.heroTitle,
           heroSubtitle: draft.heroSubtitle,
+          heroImage: draft.heroImage ?? null,
           metaTitle: draft.metaTitle,
           metaDesc: draft.metaDesc,
           metaKeywords: draft.metaKeywords,
