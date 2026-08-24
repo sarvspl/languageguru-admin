@@ -25,6 +25,13 @@ interface CustomBox {
   link?: string;
 }
 
+interface CustomChecklistGroup {
+  id: string;
+  icon?: string;
+  title: string;
+  items: string[];
+}
+
 interface CustomHighlightBanner {
   icon?: string;
   title?: string;
@@ -38,11 +45,16 @@ interface CustomSection {
   subtitle?: string;
   paragraphs: string[];
   boxes?: CustomBox[];
+  checklistGroups?: CustomChecklistGroup[];
   highlightBanner?: CustomHighlightBanner;
   ctaText?: string;
   ctaBtnText?: string;
   ctaBtnLink?: string;
   insertedAfter?: string;
+  showBoxes?: boolean;
+  showChecklists?: boolean;
+  showBanner?: boolean;
+  showCta?: boolean;
 }
 
 interface Language {
@@ -597,6 +609,52 @@ export default function LanguagesPage() {
     handleCOChange('customSections', currentCustoms);
   };
 
+  /* ── Custom Section Checklist Group Handlers ── */
+  const addCustomSectionChecklistGroup = (secId: string) => {
+    const currentCustoms = ((formData.contentOverrides?.customSections as CustomSection[]) || []).map(cs => {
+      if (cs.id === secId) {
+        const groups = cs.checklistGroups || [];
+        const newGroup: CustomChecklistGroup = {
+          id: 'group_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          icon: '⚖️',
+          title: 'Specialized Category',
+          items: [
+            'Standard document certification',
+            'Sworn & accredited translations',
+            'Government & embassy compliance',
+            'Fast express turnaround'
+          ]
+        };
+        return { ...cs, checklistGroups: [...groups, newGroup] };
+      }
+      return cs;
+    });
+    handleCOChange('customSections', currentCustoms);
+  };
+
+  const updateCustomSectionChecklistGroup = (secId: string, groupId: string, field: keyof CustomChecklistGroup, val: any) => {
+    const currentCustoms = ((formData.contentOverrides?.customSections as CustomSection[]) || []).map(cs => {
+      if (cs.id === secId) {
+        const groups = (cs.checklistGroups || []).map(g => g.id === groupId ? { ...g, [field]: val } : g);
+        return { ...cs, checklistGroups: groups };
+      }
+      return cs;
+    });
+    handleCOChange('customSections', currentCustoms);
+  };
+
+  const removeCustomSectionChecklistGroup = (secId: string, groupId: string) => {
+    const currentCustoms = ((formData.contentOverrides?.customSections as CustomSection[]) || []).map(cs => {
+      if (cs.id === secId) {
+        const groups = (cs.checklistGroups || []).filter(g => g.id !== groupId);
+        return { ...cs, checklistGroups: groups };
+      }
+      return cs;
+    });
+    handleCOChange('customSections', currentCustoms);
+  };
+
+
     const renderSectionHeader = (
     sectionId: string,
     title: string,
@@ -794,6 +852,13 @@ export default function LanguagesPage() {
           </button>
           <button
             type="button"
+            onClick={() => addCustomSectionChecklistGroup(cs.id)}
+            style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '4px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+          >
+            + Add Category Checklist
+          </button>
+          <button
+            type="button"
             onClick={() => removeCustomSection(cs.id)}
             style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '4px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
           >
@@ -862,7 +927,7 @@ export default function LanguagesPage() {
 
       {/* Interactive Cards / Service Boxes Grid */}
       <div style={{ background: '#fff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
             <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span>📦 Interactive Cards / Boxes Grid</span>
@@ -874,13 +939,24 @@ export default function LanguagesPage() {
               Clicking a card on the frontend redirects to the specified page URL.
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => addCustomSectionBox(cs.id)}
-            style={{ background: '#1d4ed8', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
-          >
-            + Add Box / Card
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showBoxes !== false ? '#166534' : '#64748b', background: cs.showBoxes !== false ? '#dcfce7' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showBoxes !== false ? '1px solid #86efac' : '1px solid #cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={cs.showBoxes !== false}
+                onChange={e => updateCustomSection(cs.id, 'showBoxes' as any, e.target.checked)}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <span>{cs.showBoxes !== false ? '✓ Show in Frontend' : '✕ Hidden in Frontend'}</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => addCustomSectionBox(cs.id)}
+              style={{ background: '#1d4ed8', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              + Add Box / Card
+            </button>
+          </div>
         </div>
 
         {(cs.boxes || []).length === 0 ? (
@@ -954,10 +1030,119 @@ export default function LanguagesPage() {
         )}
       </div>
 
+      {/* Category Checklist / Document Groups Grid */}
+      <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#c2410c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>📋 Category Checklist / Document Groups Grid</span>
+              <span style={{ fontSize: '10.5px', background: '#ffedd5', color: '#c2410c', padding: '1px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                {(cs.checklistGroups || []).length} Groups
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+              Renders multi-column categorized cards with checkmarked (✓) bullet items (e.g. Court & Litigation, Corporate Contracts, Real Estate, IP).
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showChecklists !== false ? '#c2410c' : '#64748b', background: cs.showChecklists !== false ? '#ffedd5' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showChecklists !== false ? '1px solid #fed7aa' : '1px solid #cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={cs.showChecklists !== false}
+                onChange={e => updateCustomSection(cs.id, 'showChecklists' as any, e.target.checked)}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <span>{cs.showChecklists !== false ? '✓ Show in Frontend' : '✕ Hidden in Frontend'}</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => addCustomSectionChecklistGroup(cs.id)}
+              style={{ background: '#ea580c', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              + Add Checklist Group
+            </button>
+          </div>
+        </div>
+
+        {(cs.checklistGroups || []).length === 0 ? (
+          <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '11.5px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1' }}>
+            No checklist groups added yet. Click "+ Add Checklist Group" to display categorized checkmarked items.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+            {(cs.checklistGroups || []).map((grp, gIdx) => {
+              const rawItems = Array.isArray(grp.items) ? grp.items.join('\n') : (typeof grp.items === 'string' ? grp.items : '');
+              const lineCount = rawItems.split('\n').filter((x: string) => x.trim().length > 0).length;
+              return (
+                <div key={grp.id || gIdx} style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '8px', padding: '12px', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#92400e' }}>Group #{gIdx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomSectionChecklistGroup(cs.id, grp.id)}
+                      style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', cursor: 'pointer' }}
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: '6px', marginBottom: '8px' }}>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '10px' }}>Icon</label>
+                      <input
+                        style={{ ...inputStyle, padding: '5px 8px', fontSize: '14px', textAlign: 'center', background: '#fff' }}
+                        value={grp.icon || '✓'}
+                        onChange={e => updateCustomSectionChecklistGroup(cs.id, grp.id, 'icon', e.target.value)}
+                        placeholder="⚖️"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '10px' }}>Group Heading / Title</label>
+                      <input
+                        style={{ ...inputStyle, padding: '5px 8px', fontSize: '12px', fontWeight: '700', background: '#fff' }}
+                        value={grp.title}
+                        onChange={e => updateCustomSectionChecklistGroup(cs.id, grp.id, 'title', e.target.value)}
+                        placeholder="e.g. Court & Litigation"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ ...labelStyle, fontSize: '10px', margin: 0 }}>Checklist Items (1 per line)</label>
+                      <span style={{ fontSize: '10.5px', color: '#16a34a', fontWeight: '700' }}>✓ {lineCount} items</span>
+                    </div>
+                    <textarea
+                      rows={5}
+                      style={{ ...inputStyle, padding: '6px 8px', fontSize: '11.5px', resize: 'vertical', background: '#fff', fontFamily: 'monospace' }}
+                      value={rawItems}
+                      onChange={e => {
+                        const arr = e.target.value.split('\n');
+                        updateCustomSectionChecklistGroup(cs.id, grp.id, 'items', arr);
+                      }}
+                      placeholder={"Court orders, judgments, decrees\nArbitration awards & notices\nLegal notices & summons\nFIR translations & police reports"}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Highlight Note / Attestation Chain Banner */}
       <div style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--bd)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span>🔗 Optional Highlight Note / Process Chain Banner</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--bd)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>🔗 Optional Highlight Note / Process Chain Banner</span>
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showBanner !== false ? '#1e40af' : '#64748b', background: cs.showBanner !== false ? '#dbeafe' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showBanner !== false ? '1px solid #bfdbfe' : '1px solid #cbd5e1' }}>
+            <input
+              type="checkbox"
+              checked={cs.showBanner !== false}
+              onChange={e => updateCustomSectionBanner(cs.id, 'showBanner' as any, e.target.checked ? 'true' : 'false')}
+              style={{ cursor: 'pointer', margin: 0 }}
+            />
+            <span>{cs.showBanner !== false ? '✓ Show Banner in Frontend' : '✕ Hidden'}</span>
+          </label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
           <div>
@@ -1002,8 +1187,19 @@ export default function LanguagesPage() {
 
       {/* CTA Banner Settings */}
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-        <div style={{ fontSize: '11.5px', fontWeight: '800', color: 'var(--bd)', marginBottom: '8px' }}>
-          🔘 Optional Action Bar (Sub-CTA)
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ fontSize: '11.5px', fontWeight: '800', color: 'var(--bd)' }}>
+            🔘 Optional Action Bar (Sub-CTA)
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showCta !== false ? '#9333ea' : '#64748b', background: cs.showCta !== false ? '#f3e8ff' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showCta !== false ? '1px solid #d8b4fe' : '1px solid #cbd5e1' }}>
+            <input
+              type="checkbox"
+              checked={cs.showCta !== false}
+              onChange={e => updateCustomSection(cs.id, 'showCta' as any, e.target.checked)}
+              style={{ cursor: 'pointer', margin: 0 }}
+            />
+            <span>{cs.showCta !== false ? '✓ Show CTA in Frontend' : '✕ Hidden'}</span>
+          </label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px' }}>
           <div>
@@ -2091,15 +2287,16 @@ export default function LanguagesPage() {
                         <input style={inputStyle} value={formData.metaKeywords || ''} onChange={e => setFormData({ ...formData, metaKeywords: e.target.value })} placeholder="e.g. arabic translation, certified arabic translator" />
                       </div>
                       <div>
-                        <label style={labelStyle}>OG Social Share Image (URL or Upload)</label>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                          <input style={{ ...inputStyle, flex: 1 }} placeholder="e.g. /images/og-arabic.jpg or https://..." value={formData.ogImage || ''} onChange={e => setFormData({ ...formData, ogImage: e.target.value })} />
-                          <input type="file" accept="image/*" ref={ogFileInputRef} style={{ display: 'none' }} onChange={e => handleImageUpload(e, 'ogImage')} />
-                          <button type="button" onClick={() => ogFileInputRef.current?.click()} disabled={uploadingImage}
-                            style={{ padding: '8px 16px', background: 'var(--bp)', color: 'var(--bd)', border: '1px solid var(--br)', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            {uploadingImage ? 'Uploading...' : '📁 Upload OG Image'}
-                          </button>
-                        </div>
+                        <label style={labelStyle}>URL Slug</label>
+                        <input 
+                          style={inputStyle} 
+                          value={formData.slug || ''} 
+                          onChange={e => setFormData({ ...formData, slug: e.target.value })} 
+                          placeholder="e.g. albanian" 
+                        />
+                        <span style={{ fontSize: '11px', color: 'var(--mu)', display: 'block', marginTop: '4px' }}>
+                          Live URL: <strong>/languages/{formData.slug || formData.key || 'language-slug'}</strong>
+                        </span>
                       </div>
                     </div>
                   </>

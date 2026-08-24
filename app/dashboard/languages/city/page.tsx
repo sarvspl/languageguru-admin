@@ -7,7 +7,25 @@ import { API_URL, siteLink } from '../../../../lib/env';
 
 interface CityItem { key: string; name: string; hasOverride: boolean; overrideSlug?: string; overrideMetaTitle?: string; }
 interface CustomBox { id: string; icon?: string; badge?: string; title: string; subtitle?: string; link?: string; }
-interface CustomSection { id: string; title: string; subtitle?: string; paragraphs: string[]; boxes?: CustomBox[]; ctaText?: string; ctaBtnText?: string; ctaBtnLink?: string; insertedAfter?: string; }
+interface CustomChecklistGroup { id: string; icon?: string; title: string; items: string[]; }
+interface CustomHighlightBanner { icon?: string; title?: string; text?: string; link?: string; }
+interface CustomSection {
+  id: string;
+  title: string;
+  subtitle?: string;
+  paragraphs: string[];
+  boxes?: CustomBox[];
+  checklistGroups?: CustomChecklistGroup[];
+  highlightBanner?: CustomHighlightBanner;
+  ctaText?: string;
+  ctaBtnText?: string;
+  ctaBtnLink?: string;
+  insertedAfter?: string;
+  showBoxes?: boolean;
+  showChecklists?: boolean;
+  showBanner?: boolean;
+  showCta?: boolean;
+}
 interface OD {
   slug: string; metaTitle?: string; metaDesc?: string; metaKeywords?: string; ogImage?: string;
   heroBadge?: string; heroTitle?: string; heroSub?: string; heroBgImage?: string; heroFlag?: string; heroIso?: string;
@@ -201,6 +219,59 @@ function Inner() {
   const removeCSBox = (csId: string, boxId: string) => {
     set('contentOverrides', { ...(form.contentOverrides||{}), customSections: ((form.contentOverrides?.customSections as CustomSection[])||[]).map(cs => cs.id === csId ? { ...cs, boxes: (cs.boxes||[]).filter(b => b.id !== boxId) } : cs) });
   };
+  const addCSChecklistGroup = (secId: string) => {
+    const newGroup: CustomChecklistGroup = {
+      id: 'group_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      icon: '⚖️',
+      title: 'Specialized Category',
+      items: [
+        'Standard document certification',
+        'Sworn & accredited translations',
+        'Government & embassy compliance',
+        'Fast express turnaround'
+      ]
+    };
+    set('contentOverrides', {
+      ...(form.contentOverrides || {}),
+      customSections: ((form.contentOverrides?.customSections as CustomSection[]) || []).map(cs =>
+        cs.id === secId ? { ...cs, checklistGroups: [...(cs.checklistGroups || []), newGroup] } : cs
+      )
+    });
+  };
+  const updateCSChecklistGroup = (secId: string, groupId: string, field: keyof CustomChecklistGroup, val: any) => {
+    set('contentOverrides', {
+      ...(form.contentOverrides || {}),
+      customSections: ((form.contentOverrides?.customSections as CustomSection[]) || []).map(cs =>
+        cs.id === secId ? {
+          ...cs,
+          checklistGroups: (cs.checklistGroups || []).map(g => g.id === groupId ? { ...g, [field]: val } : g)
+        } : cs
+      )
+    });
+  };
+  const removeCSChecklistGroup = (secId: string, groupId: string) => {
+    set('contentOverrides', {
+      ...(form.contentOverrides || {}),
+      customSections: ((form.contentOverrides?.customSections as CustomSection[]) || []).map(cs =>
+        cs.id === secId ? {
+          ...cs,
+          checklistGroups: (cs.checklistGroups || []).filter(g => g.id !== groupId)
+        } : cs
+      )
+    });
+  };
+  const updateCSBanner = (secId: string, field: keyof CustomHighlightBanner, val: string) => {
+    set('contentOverrides', {
+      ...(form.contentOverrides || {}),
+      customSections: ((form.contentOverrides?.customSections as CustomSection[]) || []).map(cs =>
+        cs.id === secId ? {
+          ...cs,
+          highlightBanner: { ...(cs.highlightBanner || {}), [field]: val }
+        } : cs
+      )
+    });
+  };
+
 
   const SH = (sId: string, title: string, opts?: { onAddParagraph?: () => void; canDelete?: boolean; onDelete?: () => void; }) => {
     const o = getOrder(); const idx = o.indexOf(sId);
@@ -287,44 +358,211 @@ function Inner() {
 
   const renderCSEditor = (cs: CustomSection) => (
     <div key={cs.id} style={{ marginBottom:'18px', background:'#faf5ff', border:'2px solid #e9d5ff', borderRadius:'10px', padding:'16px' }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px' }}>
-        <h4 style={{ margin:0, fontSize:'14px', fontWeight:'800', color:'#6d28d9' }}>📝 Custom: {cs.title}</h4>
-        <button type="button" onClick={() => removeCustomSection(cs.id)} style={{ background:'#fee2e2', color:'#dc2626', border:'none', borderRadius:'5px', padding:'5px 12px', cursor:'pointer', fontWeight:'700', fontSize:'12px' }}>✕ Delete</button>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'12px', flexWrap:'wrap', gap:'8px', borderBottom:'1.5px solid #e9d5ff', paddingBottom:'10px' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+          <span style={{ fontSize:'18px' }}>✨</span>
+          <h4 style={{ margin:0, fontSize:'14px', fontWeight:'800', color:'#6d28d9' }}>Custom: {cs.title || 'Untitled'}</h4>
+          <span style={{ fontSize:'10px', background:'#ede9fe', color:'#6d28d9', padding:'2px 7px', borderRadius:'4px', fontWeight:'700' }}>CUSTOM SECTION</span>
+        </div>
+        <div style={{ display:'flex', gap:'5px', flexWrap:'wrap' }}>
+          <button type="button" onClick={() => moveSection(cs.id,'up')} style={{ background:'#fff', border:'1px solid #cbd5e1', padding:'3px 8px', borderRadius:'5px', fontSize:'11px', fontWeight:'700', cursor:'pointer' }}>⬆️ Up</button>
+          <button type="button" onClick={() => moveSection(cs.id,'down')} style={{ background:'#fff', border:'1px solid #cbd5e1', padding:'3px 8px', borderRadius:'5px', fontSize:'11px', fontWeight:'700', cursor:'pointer' }}>⬇️ Down</button>
+          <button type="button" onClick={() => addCSPara(cs.id)} style={{ background:'#eff6ff', color:'#2563eb', border:'1px solid #bfdbfe', padding:'3px 8px', borderRadius:'5px', fontSize:'11px', fontWeight:'700', cursor:'pointer' }}>+ Para</button>
+          <button type="button" onClick={() => addCSBox(cs.id)} style={{ background:'#dcfce7', color:'#166534', border:'1px solid #86efac', padding:'3px 8px', borderRadius:'5px', fontSize:'11px', fontWeight:'700', cursor:'pointer' }}>+ Box</button>
+          <button type="button" onClick={() => addCSChecklistGroup(cs.id)} style={{ background:'#fef3c7', color:'#92400e', border:'1px solid #fde68a', padding:'3px 8px', borderRadius:'5px', fontSize:'11px', fontWeight:'700', cursor:'pointer' }}>+ Checklist</button>
+          <button type="button" onClick={() => removeCustomSection(cs.id)} style={{ background:'#fee2e2', color:'#dc2626', border:'1px solid #fca5a5', borderRadius:'5px', padding:'3px 8px', cursor:'pointer', fontWeight:'700', fontSize:'11px' }}>✕ Delete</button>
+        </div>
       </div>
+
       <div style={{ ...GC, marginBottom:'10px' }}>
-        <div><label style={{ fontSize:'12px', fontWeight:'700', display:'block', marginBottom:'4px', color:'#374151' }}>Title *</label>
-          <input value={cs.title} onChange={e => updateCS(cs.id,'title',e.target.value)} style={{ width:'100%', padding:'8px', border:'1px solid #e5e7eb', borderRadius:'6px', fontSize:'13px', boxSizing:'border-box' }} /></div>
-        <div><label style={{ fontSize:'12px', fontWeight:'700', display:'block', marginBottom:'4px', color:'#374151' }}>Subtitle</label>
-          <input value={cs.subtitle||''} onChange={e => updateCS(cs.id,'subtitle',e.target.value)} style={{ width:'100%', padding:'8px', border:'1px solid #e5e7eb', borderRadius:'6px', fontSize:'13px', boxSizing:'border-box' }} /></div>
+        <div>
+          <label style={{ fontSize:'12px', fontWeight:'700', display:'block', marginBottom:'4px', color:'#374151' }}>Section Heading / Title *</label>
+          <input value={cs.title} onChange={e => updateCS(cs.id,'title',e.target.value)} placeholder={`e.g. Specialized Dialect in ${(curCity?.name || 'City')}`} style={{ width:'100%', padding:'8px', border:'1px solid #e5e7eb', borderRadius:'6px', fontSize:'13px', boxSizing:'border-box', background:'#fff' }} />
+        </div>
+        <div>
+          <label style={{ fontSize:'12px', fontWeight:'700', display:'block', marginBottom:'4px', color:'#374151' }}>Section Subtitle (Optional)</label>
+          <input value={cs.subtitle||''} onChange={e => updateCS(cs.id,'subtitle',e.target.value)} placeholder="e.g. Certified and sworn linguists" style={{ width:'100%', padding:'8px', border:'1px solid #e5e7eb', borderRadius:'6px', fontSize:'13px', boxSizing:'border-box', background:'#fff' }} />
+        </div>
       </div>
-      <div style={{ marginBottom:'10px' }}>
-        <label style={{ fontSize:'12px', fontWeight:'700', display:'block', marginBottom:'4px', color:'#374151' }}>Paragraphs</label>
+
+      <div style={{ marginBottom:'12px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'4px' }}>
+          <label style={{ fontSize:'12px', fontWeight:'700', color:'#374151', margin:0 }}>Paragraphs</label>
+          <button type="button" onClick={() => addCSPara(cs.id)} style={{ fontSize:'11px', background:'#eff6ff', color:'#2563eb', border:'1px solid #bfdbfe', borderRadius:'4px', padding:'2px 7px', cursor:'pointer', fontWeight:'700' }}>+ Add Paragraph</button>
+        </div>
         {(cs.paragraphs||[]).map((p, i) => (
           <div key={i} style={{ display:'flex', gap:'6px', marginBottom:'6px' }}>
-            <textarea value={p} rows={2} onChange={e => updateCSPara(cs.id,i,e.target.value)} style={{ flex:1, padding:'8px', border:'1px solid #e5e7eb', borderRadius:'6px', fontSize:'13px', fontFamily:'inherit', resize:'vertical' }} />
+            <textarea value={p} rows={2} onChange={e => updateCSPara(cs.id,i,e.target.value)} style={{ flex:1, padding:'8px', border:'1px solid #e5e7eb', borderRadius:'6px', fontSize:'13px', fontFamily:'inherit', resize:'vertical', background:'#fff' }} />
             {(cs.paragraphs||[]).length > 1 && <button type="button" onClick={() => removeCSPara(cs.id,i)} style={{ padding:'5px 9px', background:'#fee2e2', color:'#dc2626', border:'none', borderRadius:'5px', cursor:'pointer', fontWeight:'700' }}>✕</button>}
           </div>
         ))}
-        <button type="button" onClick={() => addCSPara(cs.id)} style={{ fontSize:'12px', background:'#eff6ff', color:'#2563eb', border:'1px solid #bfdbfe', borderRadius:'5px', padding:'5px 10px', cursor:'pointer', fontWeight:'700' }}>+ Add Paragraph</button>
       </div>
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px', marginBottom:'10px' }}>
-        {(['ctaText','ctaBtnText','ctaBtnLink'] as (keyof CustomSection)[]).map(f => (
-          <div key={f}><label style={{ fontSize:'10px', fontWeight:'700', display:'block', marginBottom:'2px', color:'#6b7280' }}>{f}</label>
-            <input value={String(cs[f]||'')} onChange={e => updateCS(cs.id,f,e.target.value)} style={{ width:'100%', padding:'6px', border:'1px solid #e5e7eb', borderRadius:'5px', fontSize:'12px', boxSizing:'border-box' }} /></div>
-        ))}
-      </div>
-      <div>
-        <label style={{ fontSize:'12px', fontWeight:'700', display:'block', marginBottom:'6px', color:'#374151' }}>Service Boxes ({(cs.boxes||[]).length})</label>
-        {(cs.boxes||[]).map(box => (
-          <div key={box.id} style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr) auto', gap:'6px', marginBottom:'7px', background:'#fff', border:'1px solid #e9d5ff', borderRadius:'7px', padding:'9px', alignItems:'center' }}>
-            {(['icon','badge','title','subtitle','link'] as (keyof CustomBox)[]).map(f => (
-              <div key={f}><label style={{ fontSize:'10px', display:'block', marginBottom:'2px', color:'#6b7280' }}>{f}</label>
-                <input value={String(box[f]||'')} onChange={e => updateCSBox(cs.id,box.id,f,e.target.value)} style={{ width:'100%', padding:'4px 6px', border:'1px solid #e5e7eb', borderRadius:'4px', fontSize:'11px', boxSizing:'border-box' }} /></div>
-            ))}
-            <button type="button" onClick={() => removeCSBox(cs.id,box.id)} style={{ padding:'4px 8px', background:'#fee2e2', color:'#dc2626', border:'none', borderRadius:'4px', cursor:'pointer', fontWeight:'700', fontSize:'11px', alignSelf:'flex-end' }}>✕</button>
+
+      {/* Interactive Cards / Boxes Grid */}
+      <div style={{ background: '#fff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>📦 Interactive Cards / Boxes Grid</span>
+            <span style={{ fontSize: '10px', background: '#dbeafe', color: '#1e40af', padding: '1px 5px', borderRadius: '4px', fontWeight: '700' }}>
+              {(cs.boxes || []).length} Cards
+            </span>
           </div>
-        ))}
-        <button type="button" onClick={() => addCSBox(cs.id)} style={{ fontSize:'12px', background:'#f3e8ff', color:'#7c3aed', border:'1px solid #c4b5fd', borderRadius:'5px', padding:'5px 10px', cursor:'pointer', fontWeight:'700' }}>+ Add Box/Card</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showBoxes !== false ? '#166534' : '#64748b', background: cs.showBoxes !== false ? '#dcfce7' : '#f1f5f9', padding: '2px 7px', borderRadius: '5px', border: cs.showBoxes !== false ? '1px solid #86efac' : '1px solid #cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={cs.showBoxes !== false}
+                onChange={e => updateCS(cs.id, 'showBoxes' as any, e.target.checked)}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <span>{cs.showBoxes !== false ? '✓ Show in Frontend' : '✕ Hidden in Frontend'}</span>
+            </label>
+            <button type="button" onClick={() => addCSBox(cs.id)} style={{ fontSize: '11px', background: '#1d4ed8', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', fontWeight: '700' }}>+ Add Box</button>
+          </div>
+        </div>
+
+        {(cs.boxes || []).length === 0 ? (
+          <div style={{ padding: '8px', textAlign: 'center', color: '#94a3b8', fontSize: '11px', background: '#f8fafc', borderRadius: '5px', border: '1px dashed #cbd5e1' }}>
+            No cards added yet. Click "+ Add Box" to create clickable destination cards.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '8px' }}>
+            {(cs.boxes || []).map((box, bIdx) => (
+              <div key={box.id || bIdx} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#1e40af' }}>Card #{bIdx + 1}</span>
+                  <button type="button" onClick={() => removeCSBox(cs.id, box.id)} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '1px 5px', borderRadius: '3px', fontSize: '10px', cursor: 'pointer', fontWeight: '700' }}>✕</button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px', marginBottom: '4px' }}>
+                  <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Icon</label>
+                    <input value={box.icon || ''} onChange={e => updateCSBox(cs.id, box.id, 'icon', e.target.value)} placeholder="📋" style={{ width: '100%', padding: '3px 5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', boxSizing: 'border-box' }} /></div>
+                  <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Badge</label>
+                    <input value={box.badge || ''} onChange={e => updateCSBox(cs.id, box.id, 'badge', e.target.value)} placeholder="DE" style={{ width: '100%', padding: '3px 5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', boxSizing: 'border-box' }} /></div>
+                </div>
+                <div style={{ marginBottom: '4px' }}><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Title</label>
+                  <input value={box.title || ''} onChange={e => updateCSBox(cs.id, box.id, 'title', e.target.value)} placeholder="Card Title" style={{ width: '100%', padding: '3px 5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', fontWeight: '700', boxSizing: 'border-box' }} /></div>
+                <div style={{ marginBottom: '4px' }}><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Subtitle / Price</label>
+                  <input value={box.subtitle || ''} onChange={e => updateCSBox(cs.id, box.id, 'subtitle', e.target.value)} placeholder="₹200/page" style={{ width: '100%', padding: '3px 5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', boxSizing: 'border-box' }} /></div>
+                <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Link</label>
+                  <input value={box.link || ''} onChange={e => updateCSBox(cs.id, box.id, 'link', e.target.value)} placeholder="/quote" style={{ width: '100%', padding: '3px 5px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace', color: '#1d4ed8', boxSizing: 'border-box' }} /></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Category Checklist / Document Groups Grid */}
+      <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#c2410c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>📋 Category Checklist / Document Groups Grid</span>
+            <span style={{ fontSize: '10px', background: '#ffedd5', color: '#c2410c', padding: '1px 5px', borderRadius: '4px', fontWeight: '700' }}>
+              {(cs.checklistGroups || []).length} Groups
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showChecklists !== false ? '#c2410c' : '#64748b', background: cs.showChecklists !== false ? '#ffedd5' : '#f1f5f9', padding: '2px 7px', borderRadius: '5px', border: cs.showChecklists !== false ? '1px solid #fed7aa' : '1px solid #cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={cs.showChecklists !== false}
+                onChange={e => updateCS(cs.id, 'showChecklists' as any, e.target.checked)}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <span>{cs.showChecklists !== false ? '✓ Show in Frontend' : '✕ Hidden in Frontend'}</span>
+            </label>
+            <button type="button" onClick={() => addCSChecklistGroup(cs.id)} style={{ fontSize: '11px', background: '#ea580c', color: '#fff', border: 'none', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', fontWeight: '700' }}>+ Add Checklist</button>
+          </div>
+        </div>
+
+        {(cs.checklistGroups || []).length === 0 ? (
+          <div style={{ padding: '8px', textAlign: 'center', color: '#94a3b8', fontSize: '11px', background: '#f8fafc', borderRadius: '5px', border: '1px dashed #cbd5e1' }}>
+            No checklist groups added yet. Click "+ Add Checklist" to display checkmarked items.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '8px' }}>
+            {(cs.checklistGroups || []).map((grp, gIdx) => {
+              const rawItems = Array.isArray(grp.items) ? grp.items.join('\n') : (typeof grp.items === 'string' ? grp.items : '');
+              const lineCount = rawItems.split('\n').filter((x: string) => x.trim().length > 0).length;
+              return (
+                <div key={grp.id || gIdx} style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#92400e' }}>Group #{gIdx + 1}</span>
+                    <button type="button" onClick={() => removeCSChecklistGroup(cs.id, grp.id)} style={{ background: '#fee2e2', color: '#dc2626', border: 'none', padding: '1px 5px', borderRadius: '3px', fontSize: '10px', cursor: 'pointer', fontWeight: '700' }}>✕</button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '50px 1fr', gap: '4px', marginBottom: '4px' }}>
+                    <div><label style={{ fontSize: '9.5px', display: 'block', color: '#92400e' }}>Icon</label>
+                      <input value={grp.icon || '✓'} onChange={e => updateCSChecklistGroup(cs.id, grp.id, 'icon', e.target.value)} style={{ width: '100%', padding: '3px 4px', border: '1px solid #fde68a', borderRadius: '4px', fontSize: '12px', textAlign: 'center', background: '#fff', boxSizing: 'border-box' }} /></div>
+                    <div><label style={{ fontSize: '9.5px', display: 'block', color: '#92400e' }}>Title</label>
+                      <input value={grp.title || ''} onChange={e => updateCSChecklistGroup(cs.id, grp.id, 'title', e.target.value)} placeholder="Group Heading" style={{ width: '100%', padding: '3px 6px', border: '1px solid #fde68a', borderRadius: '4px', fontSize: '11px', fontWeight: '700', background: '#fff', boxSizing: 'border-box' }} /></div>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                      <label style={{ fontSize: '9.5px', color: '#92400e', margin: 0 }}>Items (1 per line)</label>
+                      <span style={{ fontSize: '9.5px', color: '#16a34a', fontWeight: '700' }}>✓ {lineCount}</span>
+                    </div>
+                    <textarea rows={4} value={rawItems} onChange={e => updateCSChecklistGroup(cs.id, grp.id, 'items', e.target.value.split('\n'))} style={{ width: '100%', padding: '4px 6px', border: '1px solid #fde68a', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace', resize: 'vertical', background: '#fff', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Highlight Note / Attestation Chain Banner */}
+      <div style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#1a3a6b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>🔗 Optional Highlight Note / Process Chain Banner</span>
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showBanner !== false ? '#1e40af' : '#64748b', background: cs.showBanner !== false ? '#dbeafe' : '#f1f5f9', padding: '2px 7px', borderRadius: '5px', border: cs.showBanner !== false ? '1px solid #bfdbfe' : '1px solid #cbd5e1' }}>
+            <input
+              type="checkbox"
+              checked={cs.showBanner !== false}
+              onChange={e => updateCSBanner(cs.id, 'showBanner' as any, e.target.checked ? 'true' : 'false')}
+              style={{ cursor: 'pointer', margin: 0 }}
+            />
+            <span>{cs.showBanner !== false ? '✓ Show Banner in Frontend' : '✕ Hidden'}</span>
+          </label>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr', gap: '6px', marginBottom: '6px' }}>
+          <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Icon</label>
+            <input value={cs.highlightBanner?.icon || '🔗'} onChange={e => updateCSBanner(cs.id, 'icon', e.target.value)} style={{ width: '100%', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', boxSizing: 'border-box' }} /></div>
+          <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Banner Title</label>
+            <input value={cs.highlightBanner?.title || ''} onChange={e => updateCSBanner(cs.id, 'title', e.target.value)} placeholder="Banner Title" style={{ width: '100%', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', fontWeight: '700', boxSizing: 'border-box' }} /></div>
+          <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Redirect Link</label>
+            <input value={cs.highlightBanner?.link || ''} onChange={e => updateCSBanner(cs.id, 'link', e.target.value)} placeholder="/quote" style={{ width: '100%', padding: '4px 6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace', boxSizing: 'border-box' }} /></div>
+        </div>
+        <div>
+          <label style={{ fontSize: '9.5px', display: 'block', color: '#64748b', marginBottom: '2px' }}>Banner Text / Sequence</label>
+          <textarea rows={2} value={cs.highlightBanner?.text || ''} onChange={e => updateCSBanner(cs.id, 'text', e.target.value)} placeholder="e.g. Translation → Notarization → MEA Apostille → Embassy Attestation" style={{ width: '100%', padding: '5px 6px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11.5px', resize: 'vertical', boxSizing: 'border-box' }} />
+        </div>
+      </div>
+
+      {/* CTA Banner Settings */}
+      <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ fontSize: '11.5px', fontWeight: '800', color: '#1a3a6b' }}>
+            🔘 Optional Action Bar (Sub-CTA)
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showCta !== false ? '#9333ea' : '#64748b', background: cs.showCta !== false ? '#f3e8ff' : '#f1f5f9', padding: '2px 7px', borderRadius: '5px', border: cs.showCta !== false ? '1px solid #d8b4fe' : '1px solid #cbd5e1' }}>
+            <input
+              type="checkbox"
+              checked={cs.showCta !== false}
+              onChange={e => updateCS(cs.id, 'showCta' as any, e.target.checked)}
+              style={{ cursor: 'pointer', margin: 0 }}
+            />
+            <span>{cs.showCta !== false ? '✓ Show CTA in Frontend' : '✕ Hidden'}</span>
+          </label>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px' }}>
+          <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Prompt Text</label>
+            <input value={cs.ctaText || ''} onChange={e => updateCS(cs.id, 'ctaText', e.target.value)} placeholder="Need translation?" style={{ width: '100%', padding: '5px 7px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11.5px', boxSizing: 'border-box' }} /></div>
+          <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Button Label</label>
+            <input value={cs.ctaBtnText || ''} onChange={e => updateCS(cs.id, 'ctaBtnText', e.target.value)} placeholder="Get Quote" style={{ width: '100%', padding: '5px 7px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11.5px', boxSizing: 'border-box' }} /></div>
+          <div><label style={{ fontSize: '9.5px', display: 'block', color: '#64748b' }}>Button Link</label>
+            <input value={cs.ctaBtnLink || ''} onChange={e => updateCS(cs.id, 'ctaBtnLink', e.target.value)} placeholder="/quote" style={{ width: '100%', padding: '5px 7px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '11.5px', boxSizing: 'border-box' }} /></div>
+        </div>
       </div>
     </div>
   );

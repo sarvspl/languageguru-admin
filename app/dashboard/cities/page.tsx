@@ -4,13 +4,25 @@ import React, { useEffect, useState, useRef } from 'react';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../../lib/env';
 
-/** Mirrors the backend slugify in config/slug.js */
-const slugify = (raw: string) =>
-  String(raw ?? '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+/** URL-safe slug sanitization helper */
+const sanitizeSlug = (raw: string) =>
+  String(raw ?? '').trim().toLowerCase()
+    .replace(/[\[\]{}:"\/\\?#=]+/g, '-')
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+const slugify = sanitizeSlug;
 
 const ICON_OPTIONS = [
   '🏛️','🏙️','🏢','📍','🕌','🏰','🌴','🌊','🌄','✈️','🚆','🚊','🌆','🗺️','🌐','📜','⚖️','🎓','🏥','💼','🔬','⚙️','🛡️','🏅','⭐','💎','🏷️','📌','🔑','📝','🤝','🇮🇳'
 ];
+
+interface TrustCardItem {
+  icon: string;
+  title: string;
+  desc: string;
+}
 
 interface FAQ {
   q: string;
@@ -67,6 +79,13 @@ interface CustomBox {
   link?: string;
 }
 
+interface CustomChecklistGroup {
+  id: string;
+  icon?: string;
+  title: string;
+  items: string[];
+}
+
 interface CustomHighlightBanner {
   icon?: string;
   title?: string;
@@ -80,12 +99,18 @@ interface CustomSection {
   subtitle?: string;
   paragraphs: string[];
   boxes?: CustomBox[];
+  checklistGroups?: CustomChecklistGroup[];
   highlightBanner?: CustomHighlightBanner;
   ctaText?: string;
   ctaBtnText?: string;
   ctaBtnLink?: string;
   insertedAfter?: string;
+  showBoxes?: boolean;
+  showChecklists?: boolean;
+  showBanner?: boolean;
+  showCta?: boolean;
 }
+
 
 interface City {
   id: string;
@@ -178,7 +203,12 @@ export default function CitiesPage() {
 
   const saveSlug = async (city: any, nextSlug: string) => {
     const current = city.slug || city.key;
-    if (nextSlug.trim() === current) { setSlugEdit(null); return; }
+    const cleaned = sanitizeSlug(nextSlug);
+    if (!cleaned) {
+      setSlugMsg({ id: city.id, kind: 'err', text: 'Slug cannot be empty.' });
+      return;
+    }
+    if (cleaned === current) { setSlugEdit(null); return; }
     setSlugSaving(true);
     setSlugMsg(null);
     try {
@@ -186,7 +216,7 @@ export default function CitiesPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ slug: nextSlug.trim() }),
+        body: JSON.stringify({ slug: cleaned }),
       });
       const data = await res.json();
       if (data.success) {
@@ -340,6 +370,15 @@ export default function CitiesPage() {
       { q: 'Do you provide notary and MEA apostille attestation in ' + CN + '?', a: 'Yes. We provide complete end-to-end notarization, SDM/Home Department attestation, MEA apostille and embassy legalization services in ' + CN + '.' }
     ];
 
+    const defaultTrustCards: TrustCardItem[] = [
+      { icon: '🏛️', title: 'Govt. Authorized', desc: 'MSME Reg. & ISO 9001:2015' },
+      { icon: '⭐', title: '4.9/5 Rating', desc: '10,000+ Verified Clients in ' + CN },
+      { icon: '⚡', title: '24-Hr Express', desc: 'Rapid turnaround across ' + CN },
+      { icon: '✅', title: '100% Accepted', desc: 'All Embassies, Courts & MEA' },
+      { icon: '🔒', title: 'Strict NDA', desc: 'Confidential & Encrypted' },
+      { icon: '🌍', title: '120+ Languages', desc: 'Native Certified Linguists' },
+    ];
+
     return {
       // 1. Identity & Hero
       heroBgImage: '',
@@ -367,6 +406,7 @@ export default function CitiesPage() {
       aboutP3: 'Whether you require certified translation for visa and immigration, high-volume corporate contracts, medical dossiers, academic credentials or technical documentation, Language Guru provides rapid 24-hour express delivery across ' + CN + ' with digital and physical door delivery.',
       agencyOfficeTitle: '📍 Language Guru – ' + CN + ' Client Service Center',
       officeAddressText: 'Serving ' + CN + ', ' + ST + ' and nationwide. Online submission with doorstep physical delivery. Direct Helpline: +91-9312690490 · Email: info@languageguru.in',
+      trustCards: defaultTrustCards,
       processTag: 'HOW IT WORKS',
       processTitle: 'Simple 5-Step Certified Translation Process in ' + CN,
       processSteps: defaultProcessSteps,
@@ -441,7 +481,7 @@ export default function CitiesPage() {
 
   const handleOpenAdd = () => {
     setEditingCity(null);
-        const defaults = getCityDefaults('New City', 'State', true);
+    const defaults = getCityDefaults('New City', 'State', true);
     setAboutParagraphs(defaults.aboutParagraphs || [defaults.aboutP1, defaults.aboutP2, defaults.aboutP3].filter(Boolean));
     setActiveTab('identity_hero');
     setShowModal(true);
@@ -449,8 +489,12 @@ export default function CitiesPage() {
 
   const handleOpenEdit = (city: City) => {
     setEditingCity(city);
-        const defaults = getCityDefaults(city.name, city.state || '', city.isMetro);
+    const defaults = getCityDefaults(city.name, city.state || '', city.isMetro);
     const mergedCO = { ...defaults, ...(city.contentOverrides || {}) };
+
+    if (!mergedCO.trustCards || !Array.isArray(mergedCO.trustCards) || mergedCO.trustCards.length === 0) {
+      mergedCO.trustCards = defaults.trustCards;
+    }
 
     let abPs: string[] = [];
     if (Array.isArray(mergedCO.aboutParagraphs) && mergedCO.aboutParagraphs.length > 0) {
@@ -463,6 +507,9 @@ export default function CitiesPage() {
     }
     setAboutParagraphs(abPs);
 
+    const mTitle = city.metaTitle || mergedCO.metaTitle || defaults.metaTitle;
+    const mDesc = city.metaDesc || mergedCO.metaDesc || defaults.metaDesc;
+
     setFormData({
       id: city.id,
       name: city.name,
@@ -472,9 +519,13 @@ export default function CitiesPage() {
       state: city.state || '',
       isMetro: city.isMetro !== undefined ? city.isMetro : true,
       isActive: city.isActive !== undefined ? city.isActive : true,
-      metaTitle: city.metaTitle || defaults.metaTitle,
-      metaDesc: city.metaDesc || defaults.metaDesc,
-      contentOverrides: mergedCO,
+      metaTitle: mTitle,
+      metaDesc: mDesc,
+      contentOverrides: {
+        ...mergedCO,
+        metaTitle: mTitle,
+        metaDesc: mDesc
+      },
       faqs: (city.faqs && city.faqs.length > 0) ? city.faqs : defaults.faqs,
       reviews: (city.reviews && city.reviews.length > 0) ? city.reviews : defaults.reviews
     });
@@ -722,6 +773,72 @@ export default function CitiesPage() {
     handleCOChange('customSections', currentCustoms);
   };
 
+  /* ── Custom Section Checklist Group Handlers ── */
+  const addCustomSectionChecklistGroup = (secId: string) => {
+    const currentCustoms = ((formData.contentOverrides?.customSections as CustomSection[]) || []).map(cs => {
+      if (cs.id === secId) {
+        const groups = cs.checklistGroups || [];
+        const newGroup: CustomChecklistGroup = {
+          id: 'group_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          icon: '⚖️',
+          title: 'Court & Litigation',
+          items: [
+            'Court orders, judgments, decrees',
+            'Arbitration awards & notices',
+            'Legal notices & summons',
+            'FIR translations & police reports'
+          ]
+        };
+        return { ...cs, checklistGroups: [...groups, newGroup] };
+      }
+      return cs;
+    });
+    handleCOChange('customSections', currentCustoms);
+  };
+
+  const updateCustomSectionChecklistGroup = (secId: string, groupId: string, field: keyof CustomChecklistGroup, val: any) => {
+    const currentCustoms = ((formData.contentOverrides?.customSections as CustomSection[]) || []).map(cs => {
+      if (cs.id === secId) {
+        const groups = (cs.checklistGroups || []).map(g => g.id === groupId ? { ...g, [field]: val } : g);
+        return { ...cs, checklistGroups: groups };
+      }
+      return cs;
+    });
+    handleCOChange('customSections', currentCustoms);
+  };
+
+  const removeCustomSectionChecklistGroup = (secId: string, groupId: string) => {
+    const currentCustoms = ((formData.contentOverrides?.customSections as CustomSection[]) || []).map(cs => {
+      if (cs.id === secId) {
+        const groups = (cs.checklistGroups || []).filter(g => g.id !== groupId);
+        return { ...cs, checklistGroups: groups };
+      }
+      return cs;
+    });
+    handleCOChange('customSections', currentCustoms);
+  };
+
+  /* ── Agency Trust Cards Handlers ── */
+  const handleTrustCardChange = (idx: number, field: keyof TrustCardItem, val: string) => {
+    const cards = [...(formData.contentOverrides?.trustCards || [])];
+    cards[idx] = { ...cards[idx], [field]: val };
+    handleCOChange('trustCards', cards);
+  };
+
+  const addTrustCard = () => {
+    const cards = [...(formData.contentOverrides?.trustCards || [])];
+    cards.push({ icon: '✨', title: 'New Trust Highlight', desc: 'Short benefit description' });
+    handleCOChange('trustCards', cards);
+  };
+
+  const removeTrustCard = (idx: number) => {
+    const cards = [...(formData.contentOverrides?.trustCards || [])];
+    if (cards.length <= 1) return;
+    cards.splice(idx, 1);
+    handleCOChange('trustCards', cards);
+  };
+
+
   /* ── Local Services Handlers ── */
   const addLocalService = () => {
     const list = [...(formData.contentOverrides?.servicesList || [])];
@@ -841,18 +958,26 @@ export default function CitiesPage() {
     setSuccessMsg('');
 
     try {
-            const payload: any = {
+      const cleanSlug = sanitizeSlug(formData.slug || formData.key);
+      const mTitle = (formData.metaTitle || formData.contentOverrides?.metaTitle || '').trim();
+      const mDesc = (formData.metaDesc || formData.contentOverrides?.metaDesc || '').trim();
+      const mKeywords = (formData.contentOverrides?.metaKeywords || '').trim();
+
+      const payload: any = {
         name: formData.name,
         key: formData.key,
-        slug: formData.slug || formData.key,
+        slug: cleanSlug,
         ic: formData.ic,
         state: formData.state,
         isMetro: formData.isMetro,
         isActive: formData.isActive,
-        metaTitle: formData.contentOverrides?.metaTitle || formData.metaTitle,
-        metaDesc: formData.contentOverrides?.metaDesc || formData.metaDesc,
+        metaTitle: mTitle,
+        metaDesc: mDesc,
         contentOverrides: {
           ...(formData.contentOverrides || {}),
+          metaTitle: mTitle,
+          metaDesc: mDesc,
+          metaKeywords: mKeywords,
           aboutParagraphs: aboutParagraphs.filter(p => p.trim() !== ''),
           aboutP1: aboutParagraphs[0] || '',
           aboutP2: aboutParagraphs[1] || '',
@@ -861,6 +986,7 @@ export default function CitiesPage() {
         faqs: formData.faqs || formData.contentOverrides?.faqs,
         reviews: formData.reviews || formData.contentOverrides?.reviews
       };
+
 
       let res;
       if (editingCity && editingCity.id) {
@@ -1135,6 +1261,13 @@ export default function CitiesPage() {
           </button>
           <button
             type="button"
+            onClick={() => addCustomSectionChecklistGroup(cs.id)}
+            style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a', padding: '4px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
+          >
+            + Add Category Checklist
+          </button>
+          <button
+            type="button"
             onClick={() => removeCustomSection(cs.id)}
             style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '4px 10px', borderRadius: '5px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
           >
@@ -1203,7 +1336,7 @@ export default function CitiesPage() {
 
       {/* Interactive Cards / Service Boxes Grid */}
       <div style={{ background: '#fff', border: '1px solid #bfdbfe', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
           <div>
             <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span>📦 Interactive Cards / Boxes Grid</span>
@@ -1215,13 +1348,24 @@ export default function CitiesPage() {
               Clicking a card on the frontend redirects to the specified page URL.
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => addCustomSectionBox(cs.id)}
-            style={{ background: '#1d4ed8', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
-          >
-            + Add Box / Card
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showBoxes !== false ? '#166534' : '#64748b', background: cs.showBoxes !== false ? '#dcfce7' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showBoxes !== false ? '1px solid #86efac' : '1px solid #cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={cs.showBoxes !== false}
+                onChange={e => updateCustomSection(cs.id, 'showBoxes' as any, e.target.checked)}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <span>{cs.showBoxes !== false ? '✓ Show in Frontend' : '✕ Hidden in Frontend'}</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => addCustomSectionBox(cs.id)}
+              style={{ background: '#1d4ed8', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              + Add Box / Card
+            </button>
+          </div>
         </div>
 
         {(cs.boxes || []).length === 0 ? (
@@ -1295,10 +1439,119 @@ export default function CitiesPage() {
         )}
       </div>
 
+      {/* Category Checklist / Document Groups Grid */}
+      <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#c2410c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>📋 Category Checklist / Document Groups Grid</span>
+              <span style={{ fontSize: '10.5px', background: '#ffedd5', color: '#c2410c', padding: '1px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                {(cs.checklistGroups || []).length} Groups
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+              Renders multi-column categorized cards with checkmarked (✓) bullet items (e.g. Court & Litigation, Corporate Contracts, Real Estate, IP).
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showChecklists !== false ? '#c2410c' : '#64748b', background: cs.showChecklists !== false ? '#ffedd5' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showChecklists !== false ? '1px solid #fed7aa' : '1px solid #cbd5e1' }}>
+              <input
+                type="checkbox"
+                checked={cs.showChecklists !== false}
+                onChange={e => updateCustomSection(cs.id, 'showChecklists' as any, e.target.checked)}
+                style={{ cursor: 'pointer', margin: 0 }}
+              />
+              <span>{cs.showChecklists !== false ? '✓ Show in Frontend' : '✕ Hidden in Frontend'}</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => addCustomSectionChecklistGroup(cs.id)}
+              style={{ background: '#ea580c', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              + Add Checklist Group
+            </button>
+          </div>
+        </div>
+
+        {(cs.checklistGroups || []).length === 0 ? (
+          <div style={{ padding: '12px', textAlign: 'center', color: '#94a3b8', fontSize: '11.5px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1' }}>
+            No checklist groups added yet. Click "+ Add Checklist Group" to display categorized checkmarked items.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '12px' }}>
+            {(cs.checklistGroups || []).map((grp, gIdx) => {
+              const rawItems = Array.isArray(grp.items) ? grp.items.join('\n') : (typeof grp.items === 'string' ? grp.items : '');
+              const lineCount = rawItems.split('\n').filter((x: string) => x.trim().length > 0).length;
+              return (
+                <div key={grp.id || gIdx} style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '8px', padding: '12px', position: 'relative' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: '#92400e' }}>Group #{gIdx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeCustomSectionChecklistGroup(cs.id, grp.id)}
+                      style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', padding: '2px 6px', borderRadius: '4px', fontSize: '10.5px', cursor: 'pointer' }}
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: '6px', marginBottom: '8px' }}>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '10px' }}>Icon</label>
+                      <input
+                        style={{ ...inputStyle, padding: '5px 8px', fontSize: '14px', textAlign: 'center', background: '#fff' }}
+                        value={grp.icon || '✓'}
+                        onChange={e => updateCustomSectionChecklistGroup(cs.id, grp.id, 'icon', e.target.value)}
+                        placeholder="⚖️"
+                      />
+                    </div>
+                    <div>
+                      <label style={{ ...labelStyle, fontSize: '10px' }}>Group Heading / Title</label>
+                      <input
+                        style={{ ...inputStyle, padding: '5px 8px', fontSize: '12px', fontWeight: '700', background: '#fff' }}
+                        value={grp.title}
+                        onChange={e => updateCustomSectionChecklistGroup(cs.id, grp.id, 'title', e.target.value)}
+                        placeholder="e.g. Court & Litigation"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ ...labelStyle, fontSize: '10px', margin: 0 }}>Checklist Items (1 per line)</label>
+                      <span style={{ fontSize: '10.5px', color: '#16a34a', fontWeight: '700' }}>✓ {lineCount} items</span>
+                    </div>
+                    <textarea
+                      rows={5}
+                      style={{ ...inputStyle, padding: '6px 8px', fontSize: '11.5px', resize: 'vertical', background: '#fff', fontFamily: 'monospace' }}
+                      value={rawItems}
+                      onChange={e => {
+                        const arr = e.target.value.split('\n');
+                        updateCustomSectionChecklistGroup(cs.id, grp.id, 'items', arr);
+                      }}
+                      placeholder={"Court orders, judgments, decrees\nArbitration awards & notices\nLegal notices & summons\nFIR translations & police reports"}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Highlight Note / Attestation Chain Banner */}
       <div style={{ background: '#fff', border: '1px solid #cbd5e1', borderRadius: '10px', padding: '14px', marginBottom: '14px' }}>
-        <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--bd)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span>🔗 Optional Highlight Note / Process Chain Banner</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: 'var(--bd)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>🔗 Optional Highlight Note / Process Chain Banner</span>
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showBanner !== false ? '#1e40af' : '#64748b', background: cs.showBanner !== false ? '#dbeafe' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showBanner !== false ? '1px solid #bfdbfe' : '1px solid #cbd5e1' }}>
+            <input
+              type="checkbox"
+              checked={cs.showBanner !== false}
+              onChange={e => updateCustomSectionBanner(cs.id, 'showBanner' as any, e.target.checked ? 'true' : 'false')}
+              style={{ cursor: 'pointer', margin: 0 }}
+            />
+            <span>{cs.showBanner !== false ? '✓ Show Banner in Frontend' : '✕ Hidden'}</span>
+          </label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
           <div>
@@ -1343,8 +1596,19 @@ export default function CitiesPage() {
 
       {/* CTA Banner Settings */}
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-        <div style={{ fontSize: '11.5px', fontWeight: '800', color: 'var(--bd)', marginBottom: '8px' }}>
-          🔘 Optional Action Bar (Sub-CTA)
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ fontSize: '11.5px', fontWeight: '800', color: 'var(--bd)' }}>
+            🔘 Optional Action Bar (Sub-CTA)
+          </div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '11px', fontWeight: '700', color: cs.showCta !== false ? '#9333ea' : '#64748b', background: cs.showCta !== false ? '#f3e8ff' : '#f1f5f9', padding: '3px 8px', borderRadius: '6px', border: cs.showCta !== false ? '1px solid #d8b4fe' : '1px solid #cbd5e1' }}>
+            <input
+              type="checkbox"
+              checked={cs.showCta !== false}
+              onChange={e => updateCustomSection(cs.id, 'showCta' as any, e.target.checked)}
+              style={{ cursor: 'pointer', margin: 0 }}
+            />
+            <span>{cs.showCta !== false ? '✓ Show CTA in Frontend' : '✕ Hidden'}</span>
+          </label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '10px' }}>
           <div>
@@ -1579,7 +1843,7 @@ export default function CitiesPage() {
                           <input
                             type="text"
                             value={slugEdit.value}
-                            onChange={e => setSlugEdit({ id: city.id, value: slugify(e.target.value) })}
+                            onChange={e => setSlugEdit({ id: city.id, value: e.target.value })}
                             style={{ ...inputStyle, padding: '3px 6px', fontSize: '11.5px', width: '130px' }}
                             autoFocus
                           />
@@ -1867,8 +2131,9 @@ export default function CitiesPage() {
                             <label style={labelStyle}>URL Slug (/cities/[slug])</label>
                             <input
                               style={inputStyle}
-                              value={formData.slug || formData.key}
-                              onChange={e => setFormData({ ...formData, slug: slugify(e.target.value) })}
+                              value={formData.slug !== undefined ? formData.slug : formData.key}
+                              onChange={e => setFormData({ ...formData, slug: e.target.value })}
+                              placeholder="e.g. amritsar or amritsar-slug"
                               required
                             />
                           </div>
@@ -2184,6 +2449,77 @@ export default function CitiesPage() {
                               value={formData.contentOverrides?.officeAddressText || ''}
                               onChange={e => handleCOChange('officeAddressText', e.target.value)}
                             />
+                          </div>
+                        </div>
+
+                        {/* Agency Trust & Highlight Cards (6 Cards) */}
+                        <div style={{ marginTop: '18px', background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: '10px', padding: '16px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                            <div>
+                              <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--bd)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>🏛️ Agency Trust &amp; Highlight Badges Grid (6 Cards)</span>
+                                <span style={{ fontSize: '10.5px', background: '#e0e7ff', color: '#3730a3', padding: '2px 7px', borderRadius: '4px', fontWeight: '700' }}>
+                                  {(formData.contentOverrides?.trustCards || []).length} Cards
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--mu)', marginTop: '2px' }}>
+                                Displayed directly below the overview paragraphs and office service center box on the live city page.
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={addTrustCard}
+                              style={{ background: 'var(--bd)', color: '#fff', border: 'none', padding: '5px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '700', cursor: 'pointer' }}
+                            >
+                              + Add Card
+                            </button>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '10px' }}>
+                            {(formData.contentOverrides?.trustCards || []).map((tc: TrustCardItem, tcIdx: number) => (
+                              <div key={tcIdx} style={{ background: '#ffffff', border: '1px solid var(--br)', borderRadius: '8px', padding: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--bd)' }}>Card #{tcIdx + 1}</span>
+                                  {(formData.contentOverrides?.trustCards || []).length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeTrustCard(tcIdx)}
+                                      style={{ background: 'none', border: 'none', color: '#dc2626', fontSize: '12px', cursor: 'pointer', fontWeight: '700' }}
+                                    >
+                                      ✕
+                                    </button>
+                                  )}
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: '8px', marginBottom: '6px' }}>
+                                  <div>
+                                    <label style={{ ...labelStyle, fontSize: '10px' }}>Icon</label>
+                                    <input
+                                      style={{ ...inputStyle, padding: '4px 6px', fontSize: '14px', textAlign: 'center' }}
+                                      value={tc.icon || '🏛️'}
+                                      onChange={e => handleTrustCardChange(tcIdx, 'icon', e.target.value)}
+                                    />
+                                  </div>
+                                  <div>
+                                    <label style={{ ...labelStyle, fontSize: '10px' }}>Title</label>
+                                    <input
+                                      style={{ ...inputStyle, padding: '4px 8px', fontSize: '12px', fontWeight: '700' }}
+                                      value={tc.title || ''}
+                                      onChange={e => handleTrustCardChange(tcIdx, 'title', e.target.value)}
+                                      placeholder="e.g. Govt. Authorized"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label style={{ ...labelStyle, fontSize: '10px' }}>Description / Subtitle</label>
+                                  <input
+                                    style={{ ...inputStyle, padding: '4px 8px', fontSize: '11.5px' }}
+                                    value={tc.desc || ''}
+                                    onChange={e => handleTrustCardChange(tcIdx, 'desc', e.target.value)}
+                                    placeholder="e.g. MSME Reg. & ISO 9001:2015"
+                                  />
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                       </div>
@@ -2772,15 +3108,51 @@ export default function CitiesPage() {
                         <h4 style={sectionTitleStyle}>🔍 SEO Meta Data &amp; Search Engine Optimization</h4>
                         <div style={{ marginBottom: '14px' }}>
                           <label style={labelStyle}>SEO Meta Title (Title Tag)</label>
-                          <input style={inputStyle} value={formData.contentOverrides?.metaTitle || formData.metaTitle || ''} onChange={e => { handleCOChange('metaTitle', e.target.value); setFormData({ ...formData, metaTitle: e.target.value }); }} />
+                          <input
+                            style={inputStyle}
+                            value={formData.metaTitle ?? ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setFormData(prev => ({
+                                ...prev,
+                                metaTitle: val,
+                                contentOverrides: {
+                                  ...(prev.contentOverrides || {}),
+                                  metaTitle: val
+                                }
+                              }));
+                            }}
+                            placeholder={`Certified Translation Services in ${formData.name || 'City'} | ISO Certified Agency`}
+                          />
                         </div>
                         <div style={{ marginBottom: '14px' }}>
                           <label style={labelStyle}>SEO Meta Description</label>
-                          <textarea rows={3} style={{ ...inputStyle, resize: 'vertical' }} value={formData.contentOverrides?.metaDesc || formData.metaDesc || ''} onChange={e => { handleCOChange('metaDesc', e.target.value); setFormData({ ...formData, metaDesc: e.target.value }); }} />
+                          <textarea
+                            rows={3}
+                            style={{ ...inputStyle, resize: 'vertical' }}
+                            value={formData.metaDesc ?? ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setFormData(prev => ({
+                                ...prev,
+                                metaDesc: val,
+                                contentOverrides: {
+                                  ...(prev.contentOverrides || {}),
+                                  metaDesc: val
+                                }
+                              }));
+                            }}
+                            placeholder={`Professional certified translation services in ${formData.name || 'City'}. ISO-9001:2015 certified...`}
+                          />
                         </div>
                         <div>
                           <label style={labelStyle}>Meta Keywords (Comma separated)</label>
-                          <input style={inputStyle} value={formData.contentOverrides?.metaKeywords || ''} onChange={e => handleCOChange('metaKeywords', e.target.value)} />
+                          <input
+                            style={inputStyle}
+                            value={formData.contentOverrides?.metaKeywords || ''}
+                            onChange={e => handleCOChange('metaKeywords', e.target.value)}
+                            placeholder={`translation services in ${formData.name || 'City'}, certified translation ${formData.name || 'City'}...`}
+                          />
                         </div>
                       </div>
                     </>
