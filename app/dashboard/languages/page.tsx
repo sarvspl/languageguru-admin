@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
+import { adminPath } from '../../../lib/basePath';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../../lib/env';
 
@@ -1440,7 +1441,7 @@ export default function LanguagesPage() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <a href={`/dashboard/languages/city?language=${lang.key}`} style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontWeight: '700', marginRight: '12px', fontSize: '13px', textDecoration: 'none', display: 'inline-block' }}>📍 City Pages</a>
+                        <a href={adminPath(`dashboard/languages/city?language=${lang.key}`)} style={{ background: 'none', border: 'none', color: '#7c3aed', cursor: 'pointer', fontWeight: '700', marginRight: '12px', fontSize: '13px', textDecoration: 'none', display: 'inline-block' }}>📍 City Pages</a>
                         <button onClick={() => handleOpenEdit(lang)} style={{ background: 'none', border: 'none', color: 'var(--bb)', cursor: 'pointer', fontWeight: '700', marginRight: '12px', fontSize: '13px' }}>✏️ Edit Content</button>
                         <button onClick={() => handleToggleActive(lang)} style={{ background: 'none', border: 'none', color: lang.isActive ? '#d97706' : '#16a34a', cursor: 'pointer', fontWeight: '700', marginRight: '12px', fontSize: '13px' }}>
                           {lang.isActive ? 'Deactivate' : 'Activate'}

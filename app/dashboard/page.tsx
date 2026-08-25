@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { adminPath } from '../../lib/basePath';
 import Link from 'next/link';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../lib/env';
@@ -175,7 +176,7 @@ export default function DashboardOverview() {
           <div style={{ background: '#fff', border: '1.5px solid var(--br)', borderRadius: '14px', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid var(--br)' }}>
               <h3 style={{ fontWeight: '700', color: 'var(--bd)', fontSize: '14px' }}>📥 Live Quote Queue</h3>
-              <a href="/dashboard/quotes" style={{ fontSize: '12px', fontWeight: '600', color: 'var(--bb)', textDecoration: 'none' }}>View All →</a>
+              <a href={adminPath('dashboard/quotes')} style={{ fontSize: '12px', fontWeight: '600', color: 'var(--bb)', textDecoration: 'none' }}>View All →</a>
             </div>
             {quotesLoading ? (
               <div style={{ padding: '20px', textAlign: 'center', color: '#9ca3af', fontSize: '13px' }}>Loading...</div>

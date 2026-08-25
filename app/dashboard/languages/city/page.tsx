@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { adminPath } from '../../../../lib/basePath';
 import { useSearchParams, useRouter } from 'next/navigation';
 import TopNav from '@/components/TopNav';
 import { API_URL, siteLink } from '../../../../lib/env';
@@ -572,7 +573,7 @@ function Inner() {
       <div style={{ fontSize:'48px', marginBottom:'12px' }}>🌐</div>
       <h2 style={{ color:'#374151', marginBottom:'10px' }}>No Language Selected</h2>
       <p style={{ color:'#6b7280', marginBottom:'20px' }}>Go to Languages and click <strong>📍 City Pages</strong> on any language row.</p>
-      <a href="/dashboard/languages" style={{ padding:'10px 20px', background:'#7c3aed', color:'#fff', borderRadius:'8px', textDecoration:'none', fontWeight:'700' }}>← Back to Languages</a>
+      <a href={adminPath('dashboard/languages')} style={{ padding:'10px 20px', background:'#7c3aed', color:'#fff', borderRadius:'8px', textDecoration:'none', fontWeight:'700' }}>← Back to Languages</a>
     </div>
   );
 
@@ -594,7 +595,7 @@ function Inner() {
           ))}
         </div>
         <div style={{ padding:'10px 12px', borderTop:'1px solid #e5e7eb', flexShrink:0 }}>
-          <a href="/dashboard/languages" style={{ fontSize:'12px', color:'#7c3aed', fontWeight:'700', textDecoration:'none' }}>← Back to Languages</a>
+          <a href={adminPath('dashboard/languages')} style={{ fontSize:'12px', color:'#7c3aed', fontWeight:'700', textDecoration:'none' }}>← Back to Languages</a>
         </div>
       </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { adminPath } from '../../../lib/basePath';
 import TopNav from '@/components/TopNav';
 import { API_URL, siteLink } from '../../../lib/env';
 
@@ -215,13 +216,13 @@ export default function PagesManagement() {
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <a href="/dashboard/about" style={{ background: 'var(--bd)', color: '#fff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>
+                <a href={adminPath('dashboard/about')} style={{ background: 'var(--bd)', color: '#fff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>
                   ℹ️ About Manager
                 </a>
-                <a href="/dashboard/contact" style={{ background: '#16a34a', color: '#fff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>
+                <a href={adminPath('dashboard/contact')} style={{ background: '#16a34a', color: '#fff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>
                   📞 Contact Manager
                 </a>
-                <a href="/dashboard/clients" style={{ background: '#2563eb', color: '#fff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>
+                <a href={adminPath('dashboard/clients')} style={{ background: '#2563eb', color: '#fff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none' }}>
                   👥 Clients Manager
                 </a>
               </div>
