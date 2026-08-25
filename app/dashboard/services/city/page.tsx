@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import TopNav from '@/components/TopNav';
-import { API_URL } from '../../../../lib/env';
+import { API_URL, siteLink, SITE_URL } from '../../../../lib/env';
 
 interface CityItem {
   key: string;
@@ -1221,7 +1221,7 @@ function Inner() {
               <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>Customize content, hero, pricing, FAQs, and SEO for each city independently.</p>
             </div>
             {cityKey && (
-              <a href={`http://localhost:3000/services/${liveSlug}`} target="_blank" rel="noopener noreferrer"
+              <a href={siteLink('/services/' + liveSlug)} target="_blank" rel="noopener noreferrer"
                 style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>🔗 Open Live Page</span>
               </a>
@@ -1760,7 +1760,7 @@ function Inner() {
                       <div style={{ marginBottom: '14px' }}>
                         <label style={lS}>URL Slug <span style={{ color: '#dc2626' }}>*</span></label>
                         <input style={{ ...iS, fontFamily: 'monospace', background: '#f8fafc', fontWeight: '700' }} value={form.slug || defaultCitySlug} onChange={e=>set('slug',e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))} />
-                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Live URL: <strong>localhost:3000/services/{form.slug || defaultCitySlug}</strong></div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>Live URL: <strong>{SITE_URL.replace(/^https?:\/\//, '')}/services/{form.slug || defaultCitySlug}</strong></div>
                       </div>
                       <div style={{ marginBottom: '14px' }}><label style={lS}>Meta Title</label><input style={iS} value={form.metaTitle||''} onChange={e=>set('metaTitle',e.target.value)} placeholder={`${svcName} in ${curCity?.name||cityKey} | Language Guru`} /></div>
                       <div style={{ marginBottom: '14px' }}><label style={lS}>Meta Description</label><textarea rows={3} style={{ ...iS, resize: 'vertical' }} value={form.metaDesc||''} onChange={e=>set('metaDesc',e.target.value)} /></div>

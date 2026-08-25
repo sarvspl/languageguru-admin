@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../../lib/env';
+import { adminPath } from '../../../lib/basePath';
 
 
 type SettingsData = {
@@ -226,7 +227,7 @@ export default function SettingsPage() {
       if (data.success) {
         showToast('🔐 Password changed! Please log in again.');
         setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-        setTimeout(() => { window.location.href = '/login'; }, 2500);
+        setTimeout(() => { window.location.href = adminPath('login'); }, 2500);
       } else {
         showToast(data.message || 'Failed to change password.', 'error');
       }

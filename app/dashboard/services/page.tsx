@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import TopNav from '@/components/TopNav';
 import { API_URL } from '../../../lib/env';
+import { adminPath } from '../../../lib/basePath';
 
 
 interface CustomBox {
@@ -1839,7 +1840,7 @@ export default function ServicesPage() {
                           ✏️ Edit Base
                         </button>
                         <button
-                          onClick={() => { window.location.href = `/dashboard/services/city?service=${svc.key}`; }}
+                          onClick={() => { window.location.href = adminPath(`dashboard/services/city?service=${svc.key}`); }}
                           style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
                           title="Edit City-Specific Pages"
                         >

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { API_URL, SITE_URL } from '../lib/env';
+import { adminPath } from '../lib/basePath';
 
 export default function TopNav({ title }: { title: string }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -15,7 +16,7 @@ export default function TopNav({ title }: { title: string }) {
     } catch (err) {
       console.error('Logout request failed:', err);
     } finally {
-      window.location.href = '/login';
+      window.location.href = adminPath('login');
     }
   };
 
