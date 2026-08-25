@@ -660,8 +660,14 @@ export default function HomeSectionsManagement() {
 
   const getFullImgUrl = (url: string) => {
     if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    return `${API_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+    const trimmed = String(url).trim();
+    if (trimmed.startsWith('data:')) return trimmed;
+    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/.*)?$/i.test(trimmed)) {
+      const match = trimmed.match(/^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(\/.*)?$/i);
+      return `${API_URL}${match && match[1] ? match[1] : trimmed}`;
+    }
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+    return `${API_URL}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
   };
 
   return (
