@@ -1205,6 +1205,106 @@ function Inner() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'inherit' }}>
+      <style>{`
+        .city-cms-layout {
+          display: grid;
+          grid-template-columns: 280px 1fr;
+          gap: 20px;
+          align-items: flex-start;
+        }
+        .city-cms-sidebar {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          overflow: hidden;
+          position: sticky;
+          top: 20px;
+        }
+        .city-cms-tabs {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-bottom: 16px;
+        }
+        .city-cms-grid-3 {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 14px;
+        }
+        .city-cms-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 14px;
+        }
+        .city-cms-grid-4 {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+        .city-cms-save-bar {
+          background: #fff;
+          border: 1px solid #e2e8f0;
+          border-radius: 10px;
+          padding: 14px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-top: 16px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+          position: sticky;
+          bottom: 20px;
+          z-index: 40;
+        }
+        @media (max-width: 1024px) {
+          .city-cms-layout {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+          .city-cms-sidebar {
+            position: static !important;
+          }
+          .city-cms-sidebar-list {
+            max-height: 220px !important;
+          }
+          .city-cms-grid-4 {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .city-cms-grid-3, .city-cms-grid-2, .city-cms-grid-4 {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+          .city-cms-tabs {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            padding-bottom: 8px !important;
+          }
+          .city-cms-tabs button {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+          }
+          .city-cms-save-bar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+            padding: 12px 14px !important;
+          }
+          .city-cms-save-bar > div:last-child {
+            display: flex !important;
+            gap: 8px !important;
+            width: 100% !important;
+          }
+          .city-cms-save-bar button {
+            flex: 1 !important;
+            padding: 10px 14px !important;
+          }
+        }
+      `}</style>
       <TopNav title="City Service Customizer" />
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px 20px 80px' }}>
 
@@ -1232,15 +1332,15 @@ function Inner() {
         {error && <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', color: '#991b1b', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}><span>⚠️ {error}</span><button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', color: '#991b1b' }}>✕</button></div>}
         {success && <div style={{ background: '#dcfce7', border: '1px solid #86efac', color: '#166534', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}><span>✅ {success}</span><button onClick={() => setSuccess(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: '700', color: '#166534' }}>✕</button></div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '20px', alignItems: 'flex-start' }}>
+        <div className="city-cms-layout">
 
           {/* Left: City Selector */}
-          <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden', position: 'sticky', top: '20px' }}>
+          <div className="city-cms-sidebar">
             <div style={{ background: '#f8fafc', padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '13px', fontWeight: '800', color: '#1a3a6b', marginBottom: '8px' }}>📍 Select City</div>
               <input type="text" placeholder="Search cities..." value={citySearch} onChange={e=>setCitySearch(e.target.value)} style={{ ...iS, fontSize: '12px', padding: '7px 10px' }} />
             </div>
-            <div style={{ maxHeight: 'calc(100vh - 320px)', overflowY: 'auto' }}>
+            <div className="city-cms-sidebar-list" style={{ maxHeight: 'calc(100vh - 320px)', overflowY: 'auto' }}>
               {filtCities.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#64748b', fontSize: '12px' }}>Loading cities...</div>}
               {filtCities.map(city => (
                 <button key={city.key}
@@ -1290,7 +1390,7 @@ function Inner() {
                 </div>
 
                 {/* Tabs */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '16px' }}>
+                <div className="city-cms-tabs">
                   {TABS.map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '7px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', border: '1.5px solid', background: activeTab === tab.id ? '#1a3a6b' : '#fff', color: activeTab === tab.id ? '#fff' : '#1a3a6b', borderColor: activeTab === tab.id ? '#1a3a6b' : '#e2e8f0', cursor: 'pointer' }}>
                       {tab.label}
@@ -1304,18 +1404,18 @@ function Inner() {
                     <div style={cS}>
                       <h4 style={hS}>🎯 Hero Section</h4>
                       <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '14px' }}>Empty fields inherit from base service. Use <code>{'{city}'}</code> and <code>{'{service}'}</code> as placeholders.</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                      <div className="city-cms-grid-2">
                         <div><label style={lS}>Hero Badge Tag</label><input style={iS} value={form.heroBadge||''} onChange={e=>set('heroBadge',e.target.value)} placeholder={`#1 ${svcName} in ${curCity?.name||cityKey}`} /></div>
                         <div><label style={lS}>ISO Accreditation</label><input style={iS} value={form.heroIso||''} onChange={e=>set('heroIso',e.target.value)} placeholder="ISO 17100:2015 Certified" /></div>
                       </div>
                       <div style={{ marginBottom: '14px' }}><label style={lS}>Hero Main Title (HTML allowed)</label><input style={iS} value={form.heroTitle||''} onChange={e=>set('heroTitle',e.target.value)} placeholder={`${svcName} in ${curCity?.name||'{city}'}`} /></div>
                       <div style={{ marginBottom: '14px' }}><label style={lS}>Hero Subtitle</label><textarea rows={3} style={{ ...iS, resize: 'vertical' }} value={form.heroSub||''} onChange={e=>set('heroSub',e.target.value)} /></div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                      <div className="city-cms-grid-3">
                         <div><label style={lS}>CTA Btn 1 Text</label><input style={iS} value={form.heroBtn1Text||''} onChange={e=>set('heroBtn1Text',e.target.value)} placeholder="Get Free Quote" /></div>
                         <div><label style={lS}>CTA Btn 1 Link</label><input style={iS} value={form.heroBtn1Link||''} onChange={e=>set('heroBtn1Link',e.target.value)} placeholder="/quote" /></div>
                         <div><label style={lS}>Phone Number</label><input style={iS} value={form.heroBtn2Phone||''} onChange={e=>set('heroBtn2Phone',e.target.value)} placeholder="+91-9312690490" /></div>
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                      <div className="city-cms-grid-2">
                         <div><label style={lS}>Call Button Text</label><input style={iS} value={form.heroBtn2Text||''} onChange={e=>set('heroBtn2Text',e.target.value)} /></div>
                         <div><label style={lS}>WhatsApp Number</label><input style={iS} value={form.heroBtn3WA||''} onChange={e=>set('heroBtn3WA',e.target.value)} /></div>
                       </div>
@@ -1942,7 +2042,7 @@ function Inner() {
                 )}
 
                 {/* Sticky Save Bar */}
-                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', position: 'sticky', bottom: '20px' }}>
+                <div className="city-cms-save-bar">
                   <div style={{ fontSize: '12px', color: '#64748b' }}>Editing: <strong>{svcName}</strong> in <strong>{curCity?.name||cityKey}</strong></div>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     {exists && <button onClick={handleReset} style={{ background: '#fff', color: '#991b1b', border: '1px solid #fca5a5', padding: '8px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>↩ Reset</button>}

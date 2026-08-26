@@ -578,8 +578,68 @@ function Inner() {
   );
 
   return (
-    <div style={{ display:'flex', height:'calc(100vh - 56px)', overflow:'hidden' }}>
-      <div style={{ width:'255px', flexShrink:0, borderRight:'1px solid #e5e7eb', background:'#fafafa', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+    <div className="lang-city-container">
+      <style>{`
+        .lang-city-container {
+          display: flex;
+          height: calc(100vh - 56px);
+          overflow: hidden;
+        }
+        .lang-city-sidebar {
+          width: 255px;
+          flex-shrink: 0;
+          border-right: 1px solid #e5e7eb;
+          background: #fafafa;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .lang-city-main {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+        }
+        .lang-grid-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+        }
+        .lang-grid-3 {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 14px;
+        }
+        .lang-grid-4 {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 8px;
+        }
+        @media (max-width: 1024px) {
+          .lang-city-container {
+            flex-direction: column !important;
+            height: auto !important;
+            min-height: calc(100vh - 56px) !important;
+            overflow: visible !important;
+          }
+          .lang-city-sidebar {
+            width: 100% !important;
+            max-height: 240px !important;
+            border-right: none !important;
+            border-bottom: 1px solid #e5e7eb !important;
+          }
+          .lang-city-main {
+            overflow: visible !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .lang-grid-2, .lang-grid-3, .lang-grid-4 {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+        }
+      `}</style>
+      <div className="lang-city-sidebar">
         <div style={{ padding:'14px 12px', borderBottom:'1px solid #e5e7eb', flexShrink:0 }}>
           <div style={{ fontSize:'14px', fontWeight:'800', color:'#1e3a5f', marginBottom:'2px' }}>{langFlag} {langName}</div>
           <div style={{ fontSize:'11px', color:'#6b7280', marginBottom:'8px' }}>Select a city to edit its page</div>
@@ -599,7 +659,7 @@ function Inner() {
         </div>
       </div>
 
-      <div style={{ flex:1, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div className="lang-city-main">
         {!cityKey ? (
           <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:'12px', color:'#6b7280' }}>
             <div style={{ fontSize:'48px' }}>🏙️</div>

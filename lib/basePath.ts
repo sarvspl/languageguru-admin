@@ -1,16 +1,15 @@
 /**
  * Path prefix the admin panel is served under.
  *
- * Single source of truth: `next.config.ts` feeds it to Next as `basePath`, and
- * the few places that navigate outside the router read it from here. `<Link>`,
- * `useRouter()` and `next/image` all add the prefix on their own — raw
- * `window.location` assignments do not, so those must use BASE_PATH explicitly
- * or they escape the admin panel and land on the public site.
- *
- * Set to '' to serve the admin at the domain root instead.
+ * Configured dynamically via environment variables:
+ * - In local development: defaults to '' so admin is accessed at http://localhost:3001/
+ * - In production (if hosted under a subpath e.g. /admin): set NEXT_PUBLIC_BASE_PATH=/admin
  */
-export const BASE_PATH = '/admin';
+export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 /** Build an absolute path inside the admin panel. */
-export const adminPath = (path = ''): string =>
-  `${BASE_PATH}/${String(path).replace(/^\/+/, '')}`;
+export const adminPath = (path = ''): string => {
+  const cleanPath = String(path).replace(/^\/+/, '');
+  if (!BASE_PATH) return `/${cleanPath}`;
+  return `${BASE_PATH}/${cleanPath}`;
+};
